@@ -10,6 +10,8 @@ Initial goals:
 Automatically play a game.
 Random mulligan, random plays (of trivial deck to play).
 Pass if opponent passes and you are ahead in score, otherwise play to random location.
+
+TODO: Take a few screenshots of each type of screen for development purposes.
 """
 
 import pyautogui
