@@ -20,7 +20,9 @@ import time
 def analyze_game_state():
     # observe and record everything possible about the current game state
     
-    # TODO: Screenshot the whole game window
+    # Screenshot the whole game window and save it out
+    myScreenshot = pyautogui.screenshot(region=(0, 30, 1600, 900))
+    myScreenshot.save('./screenshots/active_screen.png')
     
     # Identify the current game window
     board_active = check_for_board()
@@ -108,6 +110,10 @@ if __name__ == "__main__":
     # recognize menu screen where a game can be launched
     # TODO: use check_for_game_select
     # play unranked for now
+    
+    # pause to allow user to make Gwent window active
+    time.sleep(3)
+    
     # infinite loop to keep playing more games
     while True:
         initialize_game()
@@ -118,4 +124,8 @@ if __name__ == "__main__":
             if my_turn:
                 make_move()
                 time.sleep(1)
+                
+            # for testing purposes
+            game_active = False
         end_game()
+        break
