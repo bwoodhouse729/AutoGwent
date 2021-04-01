@@ -21,7 +21,7 @@ def analyze_game_state():
     # observe and record everything possible about the current game state
     
     # Screenshot the whole game window and save it out
-    myScreenshot = pyautogui.screenshot(region=(0, 30, 1600, 900))
+    myScreenshot = pyautogui.screenshot(region=(0, 31, 1600, 900))
     myScreenshot.save('./screenshots/active_screen.png')
     
     # Identify the current game window
