@@ -109,7 +109,16 @@ def make_move():
 def make_mulligans():
     # identify and click cards for mulligan
     
-    # TODO: Load test image to isolate cards
+    # Load test image
+    image = imageio.imread('./development_screenshots/sample_start_of_game.png')
+    
+    # plt.imshow(image)
+    # plt.show()
+    
+    # TODO: Identify number of mulligans remaining (1 - 5)
+    
+    
+    # TODO: Use edge detection to isolate cards
     
     # TODO: Identify cards by comparing to saved images
     
