@@ -177,9 +177,12 @@ def make_mulligans():
     for card in cards:
         plt.imshow(card)
         plt.show()
+        print(np.shape(card))
     
     # Card identification needs to run very quickly
     # TODO: Try a decision tree
+    
+    # Special processing required for shield effect
     
     # TODO: Select card to mulligan at this point
     
