@@ -196,6 +196,10 @@ def take_screenshot():
     myScreenshot = pyautogui.screenshot(region=(0, 31, 1600, 900))
     myScreenshot.save('./screenshots/active_screen.png')
 
+def train_decision_tree():
+    # Train a decision tree on middle portion of all test images
+    pass
+
 def transition_game_select_play_standard():
     pyautogui.dragTo(378, 473, 0.1)
     pyautogui.click()
@@ -236,7 +240,9 @@ if __name__ == "__main__":
     # transition_home_game_select()
     # transition_game_select_play_standard()
     
-    make_mulligans()
+    #make_mulligans()
+    
+    train_decision_tree()
     
     # image = imageio.imread('./development_screenshots/sample_start_of_game.png')
     # print(image[323, 405])
