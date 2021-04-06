@@ -19,7 +19,8 @@ Pass if opponent passes and you are ahead in score, otherwise play to random loc
 TODO: Take a few screenshots of each type of screen for development purposes.
 TODO: Develop routines to recognize various aspects of the game.
 TODO: Long-term, connect with C++ game simulator and AI engine to make choices
-      This script will execute the choices
+      This script will execute the choices made.
+TODO: Log each game in an easy-to-process manner.
 """
 
 import cv2
@@ -35,6 +36,8 @@ import pyautogui
 from sklearn import tree
 import time
 
+# TODO: Implement card object
+
 # TODO: update width and height for various types of card images
 width = 0
 height = 0
@@ -45,17 +48,26 @@ mulligan_names = []
 mulligan_centers = []
 number_of_mulligans = 0
 
+card_choice_names = []
+card_choice_centers = []
+card_choice_count = 0
+
 board_active = False
 card_choice_active = False
 game_select_active = False
 home_active = False
 mulligans_active = False
 
-current_player = -1 # 0 is player's turn, 1 is opponent's turn
+current_player = -1 # 0 is allied turn, 1 is enemy turn
 enemy_cards_played = []
 enemy_faction = ''
 enemy_leader_ability = ''
 enemy_leader_ability_charges = -1
+enemy_passed = False
+scores = [0, 0]
+board = [[], [], [], []] # rows from bottom-up, contains Cards
+allied_hand = []
+number_of_enemy_cards = -1
 
 def analyze_game_state():
     # observe and record everything possible about the current game state
@@ -100,27 +112,17 @@ def analyze_game_state():
                 enemy_cards_played.append(enemy_card)
         else:
             enemy_faction, enemy_leader_ability, enemy_leader_ability_charges = identify_enemy_leader_ability()
-            # TODO: Identify if opponent has passed
-            # TODO: Identify current scores
-            # TODO: Identify cards on each row of the board via their static image
-            # TODO: Recognize the back of cards as well
-            # TODO: Identify card power
-            # TODO: Identify card armor
-            # TODO: Identify card statuses
-            # TODO: Identify presence of card order ability
-            # TODO: Identify order ability status (gray, red, or green) if present
-            # TODO: Identify number of order charges if present
-            # TODO: Identify cards in (my) hand
-            # TODO: Identify card power/armor/status in my hand
-            # TODO: Identify number of cards in each player's hand
+            enemy_passed = identify_enemy_passed()
+            scores = identify_scores()
+            board = identify_board()
+            allied_hand = identify_allied_hand()
+            number_of_enemy_cards = identify_number_of_enemy_cards()
     elif mulligans_active:
         number_of_mulligans = identify_number_of_mulligans()
-        names, centers = identify_mulligan_choices()
+        mulligan_names, mulligan_centers = identify_mulligan_choices()
     elif card_choice_active:
-        # TODO: Identify the cards available to choose from
-        # TODO: Identify the number of choices to be made
-        # TODO: Challenge here: Sometimes have to read tooltip
-        pass
+        card_choice_names, card_choice_centers = identify_card_choices()
+        card_choice_count = identify_choice_count()
 
 def check_for_board():
     # return True if currently viewing the game board
@@ -163,6 +165,31 @@ def end_game():
     # click in a few places to move back to primary menu
     pass
 
+def identify_allied_hand():
+    # Identify all cards in my hand, with their power/armor/icon status
+    pass
+
+def identify_board():
+    # Identify all cards on the board and their various attributes
+    # TODO: Identify cards on each row of the board via their static image
+    # TODO: Recognize the back of cards as well
+    # TODO: Identify card power
+    # TODO: Identify card armor
+    # TODO: Identify card statuses
+    # TODO: Identify presence of card order ability
+    # TODO: Identify order ability status (gray, red, or green) if present
+    # TODO: Identify number of order charges if present
+    pass
+
+def identify_card_choices():
+    # identify cards to choose from in choice screen
+    # TODO: In a few rare cases, may have to read tooltip
+    pass
+
+def identify_choice_count():
+    # when selecting cards, identify how many cards to choose
+    pass
+
 def identify_current_player():
     # use coin image to identify current player
     pass
@@ -170,6 +197,14 @@ def identify_current_player():
 def identify_enemy_leader_ability():
     # use leader ability image to identify enemy leader ability
     # return faction, leader_ability, charges
+    pass
+
+def identify_enemy_passed():
+    # identify if the enemy has passed
+    pass
+
+def identify_number_of_enemy_cards():
+    # identify the number of cards in the enemy's hand
     pass
 
 def identify_opponent_card():
@@ -188,8 +223,6 @@ def identify_mulligan_choices(width, height, names, hashes):
     
     # plt.imshow(image)
     # plt.show()
-    
-    # TODO: Identify number of mulligans remaining (1 - 5)
     
     # Use edge detection to isolate cards
     cards = []
@@ -267,6 +300,10 @@ def identify_number_of_mulligans():
     # TODO: Use custom imagehash classifier for a screenshot of digits 1 - 5
     pass
 
+def identify_scores():
+    # identify total scores on the righthand side of the board
+    pass
+
 def image_hash(width, height, image):
     fraction_x = 0.2
     fraction_y = 0.25
@@ -322,9 +359,7 @@ def make_card_choice():
     pass
 
 def make_move():
-    # follow a specified behavior pattern and click appropriately to play a card
-    
-    # TODO: Initially, play a random card and end turn
+    # click appropriately to make a move in active game
     
     if game_select_active:
         transition_game_select_play_standard()
@@ -335,6 +370,7 @@ def make_move():
     elif board_active:
         # Make 1 action based on current board state
         
+        # TODO: Build out method skeleton here
         # Potential actions:
         # End turn
         # Pass
@@ -342,6 +378,8 @@ def make_move():
         # Activate card order
         # Target unit(s)
         # Return from targeting mode
+        
+        # TODO: Initially, play a random card and end turn
         pass
 
 def make_mulligan():
