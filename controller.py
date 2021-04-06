@@ -16,6 +16,7 @@ Automatically play a game with simple card plays and random choices.
 Random mulligan, random plays (of trivial deck to play).
 Pass if opponent passes and you are ahead in score, otherwise play to random location.
 
+Be careful with text!  English vs other languages will break.
 TODO: Take a few screenshots of each type of screen for development purposes.
 TODO: Develop routines to recognize various aspects of the game.
 TODO: Long-term, connect with C++ game simulator and AI engine to make choices
