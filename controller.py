@@ -23,6 +23,7 @@ from glob import glob
 import imageio
 from matplotlib import pyplot as plt
 import numpy as np
+import pickle
 import pyautogui
 from sklearn import tree
 import time
@@ -218,7 +219,7 @@ def train_decision_tree():
     Y = []
     names = []
     special_image = []
-    for i in range(len(files[:100])):
+    for i in range(len(files)):
         print(i)
         file = files[i]
         name = file.split('\\')[-1][:-4]
@@ -305,16 +306,27 @@ if __name__ == "__main__":
     
     #make_mulligans()
     
-    start = time.time()
+    # clf = pickle.load(open('./classifier.p', 'rb'))
+    # width = pickle.load(open('./width.p', 'rb'))
+    # height = pickle.load(open('./height.p', 'rb'))
+    # names = pickle.load(open('./names.p', 'rb'))
+    
+    # start = time.time()
     clf, width, height, names = train_decision_tree()
-    end = time.time()
-    print(int(end - start))
+    # end = time.time()
+    # print(int(end - start))
+    pickle.dump(clf, open('./classifier.p', 'wb'))
+    pickle.dump(width, open('./width.p', 'wb'))
+    pickle.dump(height, open('./height.p', 'wb'))
+    pickle.dump(names, open('./names.p', 'wb'))
     
     name = classify(clf, width, height, names, './card_images_no_tooltip/adrenaline rush.png')
     print(name)
     
     # image = imageio.imread('./development_screenshots/sample_start_of_game.png')
     # print(image[323, 405])
+    
+    
         
     
     # infinite loop to keep playing more games
