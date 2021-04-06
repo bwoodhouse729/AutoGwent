@@ -20,10 +20,13 @@ TODO: Take a few screenshots of each type of screen for development purposes.
 
 import cv2
 from glob import glob
+import imagehash
 import imageio
+from matplotlib import cm
 from matplotlib import pyplot as plt
 import numpy as np
 import pickle
+from PIL import Image
 import pyautogui
 from sklearn import tree
 import time
@@ -91,6 +94,55 @@ def end_game():
     # click in a few places to move back to primary menu
     pass
 
+def image_hash(width, height, image):
+    fraction_x = 0.2
+    fraction_y = 0.25
+    image = image[int(image.shape[0] * fraction_x):-int(image.shape[0] * fraction_x), int(image.shape[1] * fraction_y):-int(image.shape[1] * fraction_y)]
+    
+    # resize image
+    image = cv2.resize(image, (width, height), interpolation = cv2.INTER_AREA)
+    
+    im = Image.fromarray(image)
+    active_hash = imagehash.average_hash(im)
+    return active_hash
+
+def image_hash_reference():
+    files = glob('./card_images_no_tooltip/*')
+    names = []
+    hashes = []
+    for i in range(len(files)):
+        #print(i)
+        file = files[i]
+        name = file.split('\\')[-1][:-4]
+        names.append(name)
+        #print(name)
+        image = cv2.imread(file)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        fraction_x = 0.2
+        fraction_y = 0.25
+        image = image[int(image.shape[0] * fraction_x):-int(image.shape[0] * fraction_x), int(image.shape[1] * fraction_y):-int(image.shape[1] * fraction_y)]
+        
+        scale_percent = 50 # percent of original size
+        width = int(image.shape[1] * scale_percent / 100)
+        height = int(image.shape[0] * scale_percent / 100)
+        dim = (width, height)
+          
+        # resize image
+        image = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
+        
+        # plt.imshow(image)
+        # plt.show()
+        
+        # print()
+        # print()
+        
+        im = Image.fromarray(image)
+        active_hash = imagehash.average_hash(im)
+        hashes.append(active_hash)
+        
+    return width, height, names, hashes
+
 def initialize_game():
     # click to launch a game, then wait until game starts
     # TODO: click to launch a game
@@ -114,7 +166,7 @@ def make_move():
     
     pass
 
-def make_mulligans(clf, width, height, names):
+def make_mulligans(width, height, names, hashes):
     # identify and click cards for mulligan
     
     # Load test image
@@ -126,7 +178,7 @@ def make_mulligans(clf, width, height, names):
     
     # TODO: Identify number of mulligans remaining (1 - 5)
     
-    # TODO: Use edge detection to isolate cards
+    # Use edge detection to isolate cards
     cards = []
     
     edges = cv2.Canny(image,100,200)
@@ -183,11 +235,17 @@ def make_mulligans(clf, width, height, names):
         plt.imshow(card)
         plt.show()
         #print(np.shape(card))
-        answer = classify(clf, width, height, names, card)
-        print(answer)
-    
-    # Card identification needs to run very quickly
-    # TODO: Try a decision tree
+        active_hash = image_hash(width, height, card)
+        
+        min_distance = 1000000000
+        best_match = ''
+        for i in range(len(hashes)):
+            current_hash = hashes[i]
+            distance = abs(active_hash - current_hash)
+            if distance < min_distance:
+                min_distance = distance
+                best_match = names[i]
+        print(best_match)
     
     # Special processing required for shield effect
     
@@ -315,12 +373,14 @@ if __name__ == "__main__":
     # transition_home_game_select()
     # transition_game_select_play_standard()
     
-    clf = pickle.load(open('./classifier.p', 'rb'))
-    width = pickle.load(open('./width.p', 'rb'))
-    height = pickle.load(open('./height.p', 'rb'))
-    names = pickle.load(open('./names.p', 'rb'))
+    # clf = pickle.load(open('./classifier.p', 'rb'))
+    # width = pickle.load(open('./width.p', 'rb'))
+    # height = pickle.load(open('./height.p', 'rb'))
+    # names = pickle.load(open('./names.p', 'rb'))
     
-    make_mulligans(clf, width, height, names)
+    width, height, names, hashes = image_hash_reference()
+    
+    make_mulligans(width, height, names, hashes)
     
     # # start = time.time()
     # clf, width, height, names = train_decision_tree()
