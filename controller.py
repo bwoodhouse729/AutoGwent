@@ -40,14 +40,22 @@ width = 0
 height = 0
 ref_names = []
 ref_hashes = []
+
 mulligan_names = []
 mulligan_centers = []
 number_of_mulligans = 0
+
 board_active = False
 card_choice_active = False
 game_select_active = False
 home_active = False
 mulligans_active = False
+
+current_player = -1 # 0 is player's turn, 1 is opponent's turn
+enemy_cards_played = []
+enemy_faction = ''
+enemy_leader_ability = ''
+enemy_leader_ability_charges = -1
 
 def analyze_game_state():
     # observe and record everything possible about the current game state
@@ -84,31 +92,34 @@ def analyze_game_state():
     elif game_select_active:
         pass # nothing to do
     elif board_active:
-        # TODO: Identify current player
-        # TODO: If opponent is playing a card, record it
-        # If not my turn, break
-        # TODO: Identify opponent faction
-        # TODO: Identify opponent leader ability
-        # TODO: Identify number of leader ability charges remaining
-        # TODO: Identify if opponent has passed
-        # TODO: Identify current scores
-        # TODO: Identify cards on each row of the board via their static image
-        # TODO: Identify card power
-        # TODO: Identify card armor
-        # TODO: Identify card statuses
-        # TODO: Identify presence of card order ability
-        # TODO: Identify order ability status (gray, red, or green) if present
-        # TODO: Identify number of order charges if present
-        # TODO: Identify cards in (my) hand
-        # TODO: Identify card power/armor/status in my hand
-        # TODO: Identify number of cards in each player's hand
-        pass
+        current_player = identify_current_player()
+        if current_player == 1:
+            # if opponent is playing a card, record it
+            enemy_card = identify_opponent_card()
+            if enemy_card != '':
+                enemy_cards_played.append(enemy_card)
+        else:
+            enemy_faction, enemy_leader_ability, enemy_leader_ability_charges = identify_enemy_leader_ability()
+            # TODO: Identify if opponent has passed
+            # TODO: Identify current scores
+            # TODO: Identify cards on each row of the board via their static image
+            # TODO: Recognize the back of cards as well
+            # TODO: Identify card power
+            # TODO: Identify card armor
+            # TODO: Identify card statuses
+            # TODO: Identify presence of card order ability
+            # TODO: Identify order ability status (gray, red, or green) if present
+            # TODO: Identify number of order charges if present
+            # TODO: Identify cards in (my) hand
+            # TODO: Identify card power/armor/status in my hand
+            # TODO: Identify number of cards in each player's hand
     elif mulligans_active:
         number_of_mulligans = identify_number_of_mulligans()
         names, centers = identify_mulligan_choices()
     elif card_choice_active:
         # TODO: Identify the cards available to choose from
         # TODO: Identify the number of choices to be made
+        # TODO: Challenge here: Sometimes have to read tooltip
         pass
 
 def check_for_board():
@@ -150,6 +161,22 @@ def choose_mulligan():
 
 def end_game():
     # click in a few places to move back to primary menu
+    pass
+
+def identify_current_player():
+    # use coin image to identify current player
+    pass
+
+def identify_enemy_leader_ability():
+    # use leader ability image to identify enemy leader ability
+    # return faction, leader_ability, charges
+    pass
+
+def identify_opponent_card():
+    # check if enemy is playing a card
+    # if they are, recognize it from the image
+    # return card name
+    # if not, return ''
     pass
 
 def identify_mulligan_choices(width, height, names, hashes):
