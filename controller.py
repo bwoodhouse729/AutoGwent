@@ -19,10 +19,12 @@ TODO: Take a few screenshots of each type of screen for development purposes.
 """
 
 import cv2
+from glob import glob
 import imageio
 from matplotlib import pyplot as plt
 import numpy as np
 import pyautogui
+from sklearn import tree
 import time
 
 def analyze_game_state():
@@ -191,6 +193,19 @@ def make_mulligans():
     
     pass
 
+def classify(clf, width, height, names, path):
+    image = cv2.imread(path)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    
+    fraction_x = 0.2
+    fraction_y = 0.25
+    image = image[int(image.shape[0] * fraction_x):-int(image.shape[0] * fraction_x), int(image.shape[1] * fraction_y):-int(image.shape[1] * fraction_y)]
+    
+    image = cv2.resize(image, (width, height), interpolation = cv2.INTER_AREA)
+
+    index = clf.predict([np.ndarray.flatten(image)])[0]
+    return names[index]
+
 def take_screenshot():
     # Screenshot the whole game window and save it out
     myScreenshot = pyautogui.screenshot(region=(0, 31, 1600, 900))
@@ -198,7 +213,55 @@ def take_screenshot():
 
 def train_decision_tree():
     # Train a decision tree on middle portion of all test images
-    pass
+    files = glob('./card_images_no_tooltip/*')
+    X = []
+    Y = []
+    names = []
+    special_image = []
+    for i in range(len(files[:100])):
+        print(i)
+        file = files[i]
+        name = file.split('\\')[-1][:-4]
+        names.append(name)
+        #print(name)
+        image = cv2.imread(file)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        fraction_x = 0.2
+        fraction_y = 0.25
+        image = image[int(image.shape[0] * fraction_x):-int(image.shape[0] * fraction_x), int(image.shape[1] * fraction_y):-int(image.shape[1] * fraction_y)]
+        
+        scale_percent = 50 # percent of original size
+        width = int(image.shape[1] * scale_percent / 100)
+        height = int(image.shape[0] * scale_percent / 100)
+        dim = (width, height)
+          
+        # resize image
+        image = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
+        
+        # if i == 3:
+        #     special_image = image
+        
+        # plt.imshow(image)
+        # plt.show()
+        
+        # print()
+        # print()
+        
+        X.append(np.ndarray.flatten(image))
+        Y.append(i)
+        
+    # print(np.shape(X))
+    # print(np.shape(Y))
+    # print(Y)
+    
+    clf = tree.DecisionTreeClassifier()
+    clf = clf.fit(X, Y)
+    
+    # answer = clf.predict([np.ndarray.flatten(special_image)])
+    # print(answer)
+    
+    return clf, width, height, names
 
 def transition_game_select_play_standard():
     pyautogui.dragTo(378, 473, 0.1)
@@ -242,7 +305,13 @@ if __name__ == "__main__":
     
     #make_mulligans()
     
-    train_decision_tree()
+    start = time.time()
+    clf, width, height, names = train_decision_tree()
+    end = time.time()
+    print(int(end - start))
+    
+    name = classify(clf, width, height, names, './card_images_no_tooltip/adrenaline rush.png')
+    print(name)
     
     # image = imageio.imread('./development_screenshots/sample_start_of_game.png')
     # print(image[323, 405])
