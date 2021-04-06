@@ -227,14 +227,11 @@ def make_mulligans(width, height, names, hashes):
     for i in range(len(starts)):
         cards.append(image[464:724, starts[i]:ends[i]])
     
-    # TODO: Make sure saved images are up-to-date for all cards
-    # Add Way of the Witcher and 12 new leaders if necessary
-    
-    # TODO: Identify cards by comparing to saved images
     for card in cards:
-        plt.imshow(card)
-        plt.show()
-        #print(np.shape(card))
+        # plt.imshow(card)
+        # plt.show()
+        # print(np.shape(card))
+        
         active_hash = image_hash(width, height, card)
         
         min_distance = 1000000000
@@ -373,18 +370,20 @@ if __name__ == "__main__":
     # transition_home_game_select()
     # transition_game_select_play_standard()
     
-    # clf = pickle.load(open('./classifier.p', 'rb'))
-    # width = pickle.load(open('./width.p', 'rb'))
-    # height = pickle.load(open('./height.p', 'rb'))
-    # names = pickle.load(open('./names.p', 'rb'))
+    # uncomment to create image hash references based on image library of cards
+    # width, height, names, hashes = image_hash_reference()
+    # pickle.dump(width, open('./classifier/width.p', 'wb'))
+    # pickle.dump(height, open('./classifier/height.p', 'wb'))
+    # pickle.dump(names, open('./classifier/names.p', 'wb'))
+    # pickle.dump(hashes, open('./classifier/hashes.p', 'wb'))
     
-    width, height, names, hashes = image_hash_reference()
-    pickle.dump(width, open('./classifier/width.p', 'wb'))
-    pickle.dump(height, open('./classifier/height.p', 'wb'))
-    pickle.dump(names, open('./classifier/names.p', 'wb'))
-    pickle.dump(hashes, open('./classifier/hashes.p', 'wb'))
+    # load classifier parameters from files
+    width = pickle.load(open('./classifier/width.p', 'rb'))
+    height = pickle.load(open('./classifier/height.p', 'rb'))
+    names = pickle.load(open('./classifier/names.p', 'rb'))
+    hashes = pickle.load(open('./classifier/hashes.p', 'rb'))
     
-    #make_mulligans(width, height, names, hashes)
+    make_mulligans(width, height, names, hashes)
     
     # # start = time.time()
     # clf, width, height, names = train_decision_tree()
