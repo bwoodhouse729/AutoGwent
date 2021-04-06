@@ -114,7 +114,7 @@ def make_move():
     
     pass
 
-def make_mulligans():
+def make_mulligans(clf, width, height, names):
     # identify and click cards for mulligan
     
     # Load test image
@@ -134,11 +134,11 @@ def make_mulligans():
     # plt.show()
     
     # sum columns 450 to 1500 from rows 200 to 400, look for sums of 0
-    subimage = edges[200:400, 450:1500]
+    subimage = edges[176:436, 450:1500]
     # plt.imshow(subimage, cmap='gray')
     # plt.show()
     sums = np.sum(subimage, axis=0)
-    bools = sums > 0
+    bools = sums > 300
     #print(sums > 0)
     
     # identify number of cards and bounding boxes of cards
@@ -147,18 +147,20 @@ def make_mulligans():
     for i in range(1, len(bools)):
         if bools[i] and (not bools[i - 1]):
             starts.append(450 + i)
+            # print(450 + i)
         elif (not bools[i]) and bools[i - 1]:
             ends.append(450 + i)
+            # print(450 + i)
             
     for i in range(len(starts)):
         cards.append(image[176:436, starts[i]:ends[i]])
     
     # sum columns 450 to 1500 from rows 500 to 700, look for sums of 0
-    subimage = edges[500:700, 450:1500]
+    subimage = edges[464:724, 450:1500]
     # plt.imshow(subimage, cmap='gray')
     # plt.show()
     sums = np.sum(subimage, axis=0)
-    bools = sums > 0
+    bools = sums > 300
     #print(sums > 0)
     
     # identify number of cards and bounding boxes of cards
@@ -180,7 +182,9 @@ def make_mulligans():
     for card in cards:
         plt.imshow(card)
         plt.show()
-        print(np.shape(card))
+        #print(np.shape(card))
+        answer = classify(clf, width, height, names, card)
+        print(answer)
     
     # Card identification needs to run very quickly
     # TODO: Try a decision tree
@@ -194,15 +198,18 @@ def make_mulligans():
     
     pass
 
-def classify(clf, width, height, names, path):
-    image = cv2.imread(path)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+def classify(clf, width, height, names, image):
+    # image = cv2.imread(path)
+    # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     fraction_x = 0.2
     fraction_y = 0.25
     image = image[int(image.shape[0] * fraction_x):-int(image.shape[0] * fraction_x), int(image.shape[1] * fraction_y):-int(image.shape[1] * fraction_y)]
     
     image = cv2.resize(image, (width, height), interpolation = cv2.INTER_AREA)
+
+    plt.imshow(image)
+    plt.show()
 
     index = clf.predict([np.ndarray.flatten(image)])[0]
     return names[index]
@@ -239,6 +246,10 @@ def train_decision_tree():
           
         # resize image
         image = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
+        
+        # if name == 'oneiromancy':
+        #     plt.imshow(image)
+        #     plt.show()
         
         # if i == 3:
         #     special_image = image
@@ -304,12 +315,12 @@ if __name__ == "__main__":
     # transition_home_game_select()
     # transition_game_select_play_standard()
     
-    #make_mulligans()
-    
     clf = pickle.load(open('./classifier.p', 'rb'))
     width = pickle.load(open('./width.p', 'rb'))
     height = pickle.load(open('./height.p', 'rb'))
     names = pickle.load(open('./names.p', 'rb'))
+    
+    make_mulligans(clf, width, height, names)
     
     # # start = time.time()
     # clf, width, height, names = train_decision_tree()
@@ -320,8 +331,8 @@ if __name__ == "__main__":
     # pickle.dump(height, open('./height.p', 'wb'))
     # pickle.dump(names, open('./names.p', 'wb'))
     
-    name = classify(clf, width, height, names, './card_images_no_tooltip/adrenaline rush.png')
-    print(name)
+    # name = classify(clf, width, height, names, './card_images_no_tooltip/adrenaline rush.png')
+    # print(name)
     
     # image = imageio.imread('./development_screenshots/sample_start_of_game.png')
     # print(image[323, 405])
