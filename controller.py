@@ -379,8 +379,12 @@ if __name__ == "__main__":
     # names = pickle.load(open('./names.p', 'rb'))
     
     width, height, names, hashes = image_hash_reference()
+    pickle.dump(width, open('./classifier/width.p', 'wb'))
+    pickle.dump(height, open('./classifier/height.p', 'wb'))
+    pickle.dump(names, open('./classifier/names.p', 'wb'))
+    pickle.dump(hashes, open('./classifier/hashes.p', 'wb'))
     
-    make_mulligans(width, height, names, hashes)
+    #make_mulligans(width, height, names, hashes)
     
     # # start = time.time()
     # clf, width, height, names = train_decision_tree()
