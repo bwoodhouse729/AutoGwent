@@ -6,6 +6,10 @@ Created on Mon Mar 29 11:39:03 2021
 
 Maintain game state while playing Gwent and take automatic actions.
 
+Settings: 
+Resolution 1600 x 900, game window in upper-left of screen.
+Graphics -> Premium Cards -> Disabled
+
 Initial goals:
 Automatically play a game.
 Random mulligan, random plays (of trivial deck to play).
@@ -14,6 +18,7 @@ Pass if opponent passes and you are ahead in score, otherwise play to random loc
 TODO: Take a few screenshots of each type of screen for development purposes.
 """
 
+import cv2
 import imageio
 from matplotlib import pyplot as plt
 import numpy as np
@@ -110,21 +115,76 @@ def make_mulligans():
     # identify and click cards for mulligan
     
     # Load test image
-    image = imageio.imread('./development_screenshots/sample_start_of_game.png')
+    image = cv2.imread('./development_screenshots/sample_start_of_game.png')
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     # plt.imshow(image)
     # plt.show()
     
     # TODO: Identify number of mulligans remaining (1 - 5)
     
-    
     # TODO: Use edge detection to isolate cards
+    cards = []
+    
+    edges = cv2.Canny(image,100,200)
+    # plt.imshow(edges, cmap='gray')
+    # plt.show()
+    
+    # sum columns 450 to 1500 from rows 200 to 400, look for sums of 0
+    subimage = edges[200:400, 450:1500]
+    # plt.imshow(subimage, cmap='gray')
+    # plt.show()
+    sums = np.sum(subimage, axis=0)
+    bools = sums > 0
+    #print(sums > 0)
+    
+    # identify number of cards and bounding boxes of cards
+    starts = []
+    ends = []
+    for i in range(1, len(bools)):
+        if bools[i] and (not bools[i - 1]):
+            starts.append(450 + i)
+        elif (not bools[i]) and bools[i - 1]:
+            ends.append(450 + i)
+            
+    for i in range(len(starts)):
+        cards.append(image[176:436, starts[i]:ends[i]])
+    
+    # sum columns 450 to 1500 from rows 500 to 700, look for sums of 0
+    subimage = edges[500:700, 450:1500]
+    # plt.imshow(subimage, cmap='gray')
+    # plt.show()
+    sums = np.sum(subimage, axis=0)
+    bools = sums > 0
+    #print(sums > 0)
+    
+    # identify number of cards and bounding boxes of cards
+    starts = []
+    ends = []
+    for i in range(1, len(bools)):
+        if bools[i] and (not bools[i - 1]):
+            starts.append(450 + i)
+        elif (not bools[i]) and bools[i - 1]:
+            ends.append(450 + i)
+            
+    for i in range(len(starts)):
+        cards.append(image[464:724, starts[i]:ends[i]])
+    
+    # TODO: Make sure saved images are up-to-date for all cards
+    # Add Way of the Witcher and 12 new leaders if necessary
     
     # TODO: Identify cards by comparing to saved images
+    for card in cards:
+        plt.imshow(card)
+        plt.show()
     
-    # TODO: Make sure execution is < 3 seconds total
+    # Card identification needs to run very quickly
+    # TODO: Try a decision tree
     
-    # TODO: Randomly select card to mulligan at this point
+    # TODO: Select card to mulligan at this point
+    
+    # TODO: Click on selected card
+    # Requires storing the coordinates of the center of each card
     
     pass
 
