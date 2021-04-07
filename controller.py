@@ -70,6 +70,30 @@ board = [[], [], [], []] # rows from bottom-up, contains Cards
 allied_hand = []
 number_of_enemy_cards = -1
 
+def action_end_targeting():
+    # right click? to end targeting mode
+    pass
+
+def action_end_turn():
+    # click button to end turn
+    pass
+
+def action_order_card(row, position):
+    # execute order on card in specified row and position
+    pass
+
+def action_pass():
+    # click and hold end turn button to hard pass
+    pass
+
+def action_play_card(index):
+    # play card from hand in position index
+    pass
+
+def action_target_card(row, position):
+    # click card in specified row and position to assign target of action
+    pass
+
 def analyze_game_state():
     # observe and record everything possible about the current game state
     
@@ -173,7 +197,7 @@ def identify_allied_hand():
 def identify_board():
     # Identify all cards on the board and their various attributes
     # TODO: Identify cards on each row of the board via their static image
-    # TODO: Recognize the back of cards as well
+    # TODO: Recognize the back of cards as well for traps
     # TODO: Identify card power
     # TODO: Identify card armor
     # TODO: Identify card statuses
@@ -371,14 +395,13 @@ def make_move():
     elif board_active:
         # Make 1 action based on current board state
         
-        # TODO: Build out method skeleton here
         # Potential actions:
-        # End turn
-        # Pass
-        # Play a card in a specific position
-        # Activate card order
-        # Target unit(s)
-        # Return from targeting mode
+        # action_end_turn
+        # action_pass
+        # action_play_card(index)
+        # action_order_card(row, position)
+        # action_target_card(row, position)
+        # action_end_targeting()
         
         # TODO: Initially, play a random card and end turn
         pass
@@ -440,8 +463,8 @@ if __name__ == "__main__":
     ref_names = pickle.load(open('./classifier/names.p', 'rb'))
     ref_hashes = pickle.load(open('./classifier/hashes.p', 'rb'))
     
-    analyze_game_state()
-    make_move()
+    # analyze_game_state()
+    # make_move()
     
     # # start = time.time()
     # clf, width, height, names = train_decision_tree()
