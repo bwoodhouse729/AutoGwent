@@ -16,9 +16,9 @@ Automatically play a game with simple card plays and random choices.
 Random mulligan, random plays (of trivial deck to play).
 Pass if opponent passes and you are ahead in score, otherwise play to random location.
 
-Be careful with text!  English vs other languages will break.
+If possible, avoid using text besides numbers.  Other languages will cause issues.
 TODO: Take a few screenshots of each type of screen for development purposes.
-TODO: Develop routines to recognize various aspects of the game.
+TODO: Fill out skeleton by developing routines to recognize various aspects of the game.
 TODO: Long-term, connect with C++ game simulator and AI engine to make choices
       This script will execute the choices made.
 TODO: Log each game in an easy-to-process manner.
@@ -37,7 +37,67 @@ import pyautogui
 from sklearn import tree
 import time
 
-# TODO: Implement card object
+class Card:
+    def Card(self, name):
+        self.name = name
+        
+        self.power = -1
+        self.armor = -1
+        
+        # statuses
+        self.vitality_bleed = 0
+        self.defender = False
+        self.doomed = False
+        self.immunity = False
+        self.locked = False
+        self.poisoned = False
+        self.resilience = False
+        self.rupture = False
+        self.shield = False
+        self.spying = False
+        self.veil = False
+        
+    def set_power(self, power):
+        self.power = power
+    
+    def set_armor(self, armor):
+        self.armor = armor
+        
+    def add_vitality(self, amount):
+        self.vitality_bleed += amount
+        
+    def add_bleed(self, amount):
+        self.vitality_bleed -= amount
+        
+    def add_defender(self):
+        self.defender = True
+        
+    def add_doomed(self):
+        self.doomed = True
+        
+    def add_immunity(self):
+        self.immunity = True
+        
+    def add_locked(self):
+        self.locked = True
+        
+    def add_poisoned(self):
+        self.poisoned = True
+        
+    def add_resilience(self):
+        self.resilience = True
+        
+    def add_rupture(self):
+        self.rupture = True
+        
+    def add_shield(self):
+        self.shield = True
+        
+    def add_spying(self):
+        self.spying = True
+        
+    def add_veil(self):
+        self.veil = True
 
 # TODO: update width and height for various types of card images
 width = 0
