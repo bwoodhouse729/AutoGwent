@@ -143,11 +143,14 @@ def action_order_card(row, position):
     # execute order on card in specified row and position
     pass
 
-def action_pass():
+def action_hard_pass():
     # click and hold end turn button to hard pass
-    pass
-
-def action_play_card(index):
+    pyautogui.dragTo(1539, 480, 0.1)
+    pyautogui.mouseDown()
+    time.sleep(1)
+    pyautogui.mouseUp()
+    
+def action_play_card(index, row, position):
     # play card from hand in position index
     pass
 
@@ -524,7 +527,7 @@ if __name__ == "__main__":
     ref_names = pickle.load(open('./classifier/names.p', 'rb'))
     ref_hashes = pickle.load(open('./classifier/hashes.p', 'rb'))
     
-    action_end_turn()
+    #action_hard_pass()
     
     # analyze_game_state()
     # make_move()
