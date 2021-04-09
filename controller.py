@@ -136,7 +136,8 @@ def action_end_targeting():
 
 def action_end_turn():
     # click button to end turn
-    pass
+    pyautogui.dragTo(1539, 480, 0.1)
+    pyautogui.click()
 
 def action_order_card(row, position):
     # execute order on card in specified row and position
@@ -522,6 +523,8 @@ if __name__ == "__main__":
     height = pickle.load(open('./classifier/height.p', 'rb'))
     ref_names = pickle.load(open('./classifier/names.p', 'rb'))
     ref_hashes = pickle.load(open('./classifier/hashes.p', 'rb'))
+    
+    action_end_turn()
     
     # analyze_game_state()
     # make_move()
