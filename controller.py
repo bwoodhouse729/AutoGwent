@@ -516,7 +516,7 @@ if __name__ == "__main__":
     time.sleep(3)
     
     # uncomment to take screenshot for development
-    # take_screenshot()
+    take_screenshot()
     
     # uncomment to create image hash references based on image library of cards
     # width, height, names, hashes = image_hash_reference()
