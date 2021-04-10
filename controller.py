@@ -261,6 +261,10 @@ def identify_allied_hand():
 def identify_board():
     # Identify all cards on the board and their various attributes
     # TODO: Identify cards on each row of the board via their static image
+    # Start by using lower right corner of the cards (bronze or gold) to
+    # indicate how many cards are present.  Need coordinates for even & odd
+    # (take photos of 8 and 9 card rows), all 4 corners.
+    
     # TODO: Recognize the back of cards as well for traps
     # TODO: Identify card power
     # TODO: Identify card armor
