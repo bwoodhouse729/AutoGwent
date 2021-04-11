@@ -250,6 +250,20 @@ def choose_mulligan():
     # TODO: continue should also be a choice
     return 0
 
+def classify_card_image(card):
+    active_hash = image_hash(width, height, card)
+        
+    min_distance = 1000000000
+    best_match = ''
+    for i in range(len(ref_hashes)):
+        current_hash = ref_hashes[i]
+        distance = abs(active_hash - current_hash)
+        if distance < min_distance:
+            min_distance = distance
+            best_match = ref_names[i]
+    
+    return best_match
+
 def end_game():
     # click in a few places to move back to primary menu
     pass
@@ -532,6 +546,18 @@ if __name__ == "__main__":
     height = pickle.load(open('./classifier/height.p', 'rb'))
     ref_names = pickle.load(open('./classifier/names.p', 'rb'))
     ref_hashes = pickle.load(open('./classifier/hashes.p', 'rb'))
+    
+    image = cv2.imread('./development_screenshots/sample_board_8_cards.png')
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    
+    # 493, 353 - 10, 89 = 483, 264
+    # 410, 229 - 10, 89 = 400, 140
+    card = image[140:264, 400:483]
+    plt.imshow(card)
+    plt.show()
+    
+    name = classify_card_image(card)
+    print(name)
     
     #action_hard_pass()
     
