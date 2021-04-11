@@ -281,6 +281,42 @@ def identify_board():
     # Note the coordinates depend on whose turn it is.  The camera zooms
     # out when it is player 0's turn.
     
+    # Use cluster in upper left of card to identify card presence
+    # Use left-most diamond as an indication of how many cards to expect
+    
+    # Diamond heights: 134, 267, 422, 587
+    # left-most starts: 363, 345, 335, 294
+    
+    #image = cv2.imread('./development_screenshots/sample_board_9_cards.png')
+    image = cv2.imread('./development_screenshots/sample_read_board.png')
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    
+    diamond_heights = [134, 267, 422, 589]
+    left_starts = [363, 345, 335, 294]
+    widths = [95, 102, 108, 113]
+    
+    for row in range(4):
+        
+        estimated_count = 0
+        
+        hsv_image = cv2.cvtColor(image[diamond_heights[row] - 15:diamond_heights[row] + 15, left_starts[row]:left_starts[row] + 500], cv2.COLOR_RGB2HSV)
+        lower = np.array([12, 50, 50])
+        upper = np.array([30, 150, 150])
+        mask = cv2.inRange(hsv_image, lower, upper)
+        # plt.figure(figsize=(20, 20))
+        # plt.imshow(mask)
+        # plt.show()
+        
+        for i in range(0, np.shape(hsv_image)[1]):
+            active_sum = sum(mask[:, i])
+            if active_sum > 5 * 255:
+                #print(i)
+                estimated_count = int(round(9 - 2 * i / widths[row]))
+                print(estimated_count)
+                break
+            
+    # TODO: Recover all cards based on estimated count, then identify them
+    
     # TODO: Recognize the back of cards as well for traps
     # TODO: Identify card power
     # TODO: Identify card armor
@@ -549,15 +585,26 @@ if __name__ == "__main__":
     
     image = cv2.imread('./development_screenshots/sample_board_8_cards.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
     
-    # 493, 353 - 10, 89 = 483, 264
-    # 410, 229 - 10, 89 = 400, 140
-    card = image[140:264, 400:483]
-    plt.imshow(card)
-    plt.show()
+    identify_board()
     
-    name = classify_card_image(card)
-    print(name)
+    # # 493, 353 - 10, 89 = 483, 264
+    # # 410, 229 - 10, 89 = 400, 140
+    # #card = image[140:264, 400:483]
+    # color = hsv_image[263:264, 482:483]
+    # print(color[0][0])
+    # # plt.imshow(color)
+    # # plt.show()
+    # lower_gold = np.array([21, 50, 100])
+    # upper_gold = np.array([25, 230, 255])
+    
+    # mask = cv2.inRange(hsv_image, lower_gold, upper_gold)
+    # plt.imshow(mask)
+    # plt.show()
+    
+    # name = classify_card_image(card)
+    # print(name)
     
     #action_hard_pass()
     
