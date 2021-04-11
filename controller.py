@@ -274,18 +274,11 @@ def identify_allied_hand():
 
 def identify_board():
     # Identify all cards on the board and their various attributes
-    # TODO: Identify cards on each row of the board via their static image
-    # Start by using upper right corner of the cards (bronze or gold) to
-    # indicate how many cards are present.  Need coordinates for even & odd
-    # (take photos of 8 and 9 card rows), all 4 corners.
     # Note the coordinates depend on whose turn it is.  The camera zooms
     # out when it is player 0's turn.
     
     # Use cluster in upper left of card to identify card presence
     # Use left-most diamond as an indication of how many cards to expect
-    
-    # Diamond heights: 134, 267, 422, 587
-    # left-most starts: 363, 345, 335, 294
     
     #image = cv2.imread('./development_screenshots/sample_board_9_cards.png')
     image = cv2.imread('./development_screenshots/sample_read_board.png')
@@ -293,7 +286,42 @@ def identify_board():
     
     diamond_heights = [134, 267, 422, 589]
     left_starts = [363, 345, 335, 294]
+    card_starts = [363, 345, 315, 294]
     widths = [95, 102, 108, 113]
+    
+    # coordinates of cards, by row
+    upper_lefts_odd = [[[121, 367], [121, 463], [121, 560], [121, 658], [121, 754], [121, 851], [121, 948], [121, 1045], [121, 1142]],
+                       [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]],
+                       [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]],
+                       [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]]]
+    upper_rights_odd = [[[121, 458], [121, 555], [121, 653], [121, 749], [121, 846], [121, 943], [121, 1040], [121, 1137], [121, 1233]],
+                        [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]],
+                       [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]],
+                       [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]]]
+    lower_lefts_odd = [[[239, 349], [239, 450], [239, 551], [239, 652], [239, 753], [239, 853], [239, 955], [239, 1055], [239, 1156]],
+                       [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]],
+                       [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]],
+                       [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]]]
+    lower_rights_odd = [[[239, 444], [239, 546], [239, 647], [239, 748], [239, 848], [239, 950], [239, 1050], [239, 1151], [239, 1252]],
+                        [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]],
+                       [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]],
+                       [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]]]
+    upper_lefts_even = [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ],
+                        [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ],
+                        [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ],
+                        [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]]
+    upper_rights_even = [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ],
+                         [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ],
+                         [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ],
+                         [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]]
+    lower_lefts_even = [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ],
+                        [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ],
+                        [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ],
+                        [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]]
+    lower_rights_even = [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ],
+                         [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ],
+                         [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ],
+                         [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]]
     
     for row in range(4):
         
@@ -312,10 +340,30 @@ def identify_board():
             if active_sum > 5 * 255:
                 #print(i)
                 estimated_count = int(round(9 - 2 * i / widths[row]))
-                print(estimated_count)
                 break
             
-    # TODO: Recover all cards based on estimated count, then identify them
+        # TODO: Recover all cards based on estimated count, then identify them
+        if estimated_count % 2 == 0 and estimated_count > 0:
+            # start from coordinates of all 8 cards, pick out center ones appropriately
+            start = 4.0 - (estimated_count / 2)
+            for i in range(estimated_count):
+                upper_left = upper_lefts_odd[start + i]
+                lower_right = lower_rights_odd[start + i]
+                
+                card = image[upper_left[0]:lower_right[0], upper_left[1]:lower_right[1], :]
+                plt.imshow(card)
+                plt.show()
+                
+        else: # estimated_count % 2 == 1
+            # start from coordinates of all 9 cards, pick out center ones appropriately
+            start = 4 - ((estimated_count - 1) // 2)
+            for i in range(estimated_count):
+                upper_left = upper_lefts_odd[start + i]
+                lower_right = lower_rights_odd[start + i]
+                
+                card = image[upper_left[0]:lower_right[0], upper_left[1]:lower_right[1], :]
+                plt.imshow(card)
+                plt.show()
     
     # TODO: Recognize the back of cards as well for traps
     # TODO: Identify card power
