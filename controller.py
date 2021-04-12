@@ -251,6 +251,9 @@ def choose_mulligan():
     return 0
 
 def classify_card_image(card):
+    
+    # TODO: Improve classifications by using faction information from csv
+    
     active_hash = image_hash(width, height, card)
         
     min_distance = 1000000000
@@ -293,19 +296,19 @@ def identify_board():
     upper_lefts_odd = [[[121, 367], [121, 463], [121, 560], [121, 658], [121, 754], [121, 851], [121, 948], [121, 1045], [121, 1142]],
                         [[252, 347], [252, 449], [252, 550], [252, 652], [252, 753], [252, 855], [252, 957], [252, 1058], [252, 1159]],
                         [[406, 322], [406, 429], [406, 535], [406, 642], [406, 750], [406, 857], [406, 964], [406, 1070], [406, 1178]],
-                        [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]]]
+                        [[570, 295], [570, 409], [570, 522], [570, 634], [570, 747], [570, 860], [570, 973], [570, 1085], [570, 1199]]]
     upper_rights_odd = [[[121, 458], [121, 555], [121, 653], [121, 749], [121, 846], [121, 943], [121, 1040], [121, 1137], [121, 1233]],
                         [[252, 444], [252, 545], [252, 647], [252, 748], [252, 850], [252, 952], [252, 1053], [252, 1154], [252, 1253]],
                         [[406, 422], [406, 530], [406, 637], [406, 745], [406, 852], [406, 958], [406, 1065], [406, 1172], [406, 1279]],
-                        [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]]]
+                        [[570, 403], [570, 516], [570, 627], [570, 741], [570, 854], [570, 967], [570, 1079], [570, 1191], [570, 1305]]]
     lower_lefts_odd = [[[253, 349], [253, 450], [239, 551], [239, 652], [239, 753], [239, 853], [239, 955], [239, 1055], [239, 1156]],
                         [[384, 326], [384, 432], [384, 538], [384, 644], [384, 750], [384, 856], [384, 962], [384, 1068], [384, 1174]],
                         [[554, 298], [554, 411], [554, 523], [554, 635], [554, 747], [554, 859], [554, 971], [554, 1083], [554, 1195]],
-                        [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]]]
+                        [[733, 270], [733, 389], [733, 507], [733, 625], [733, 744], [733, 861], [733, 980], [733, 1099], [733, 1218]]]
     lower_rights_odd = [[[239, 444], [239, 546], [239, 647], [239, 748], [239, 848], [239, 950], [239, 1050], [239, 1151], [239, 1252]],
                         [[384, 425], [384, 533], [384, 639], [384, 745], [384, 851], [384, 957], [384, 1063], [384, 1169], [384, 1275]],
                         [[554, 404], [554, 517], [554, 629], [554, 741], [554, 853], [554, 966], [554, 1077], [554, 1189], [554, 1301]],
-                        [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ]]]
+                        [[733, 382], [733, 501], [733, 620], [733, 739], [733, 856], [733, 975], [733, 1093], [733, 1211], [733, 1330]]]
     upper_lefts_even = [[, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ],
                         [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ],
                         [, ], [, ], [, ], [, ], [, ], [, ], [, ], [, ],
@@ -340,30 +343,29 @@ def identify_board():
             if active_sum > 5 * 255:
                 #print(i)
                 estimated_count = int(round(9 - 2 * i / widths[row]))
+                #print(estimated_count)
                 break
-            
+        
         # TODO: Recover all cards based on estimated count, then identify them
         if estimated_count % 2 == 0 and estimated_count > 0:
             # start from coordinates of all 8 cards, pick out center ones appropriately
             start = 4.0 - (estimated_count / 2)
             for i in range(estimated_count):
-                upper_left = upper_lefts_odd[start + i]
-                lower_right = lower_rights_odd[start + i]
-                
-                card = image[upper_left[0]:lower_right[0], upper_left[1]:lower_right[1], :]
-                plt.imshow(card)
-                plt.show()
-                
+                #card = image[upper_lefts_even[row][start + i][0]:lower_rights_even[row][start + i][0], upper_lefts_even[row][start + i][1]:lower_rights_even[row][start + i][1], :]
+                # plt.imshow(card)
+                # plt.show()
+                pass
         else: # estimated_count % 2 == 1
             # start from coordinates of all 9 cards, pick out center ones appropriately
             start = 4 - ((estimated_count - 1) // 2)
-            for i in range(estimated_count):
-                upper_left = upper_lefts_odd[start + i]
-                lower_right = lower_rights_odd[start + i]
-                
-                card = image[upper_left[0]:lower_right[0], upper_left[1]:lower_right[1], :]
+            #print(start)
+            for i in range(estimated_count):                
+                card = image[upper_lefts_odd[row][start + i][0]:lower_rights_odd[row][start + i][0], upper_lefts_odd[row][start + i][1]:lower_rights_odd[row][start + i][1], :]
                 plt.imshow(card)
                 plt.show()
+                
+                name = classify_card_image(card)
+                print(name)
     
     # TODO: Recognize the back of cards as well for traps
     # TODO: Identify card power
@@ -509,7 +511,7 @@ def image_hash(width, height, image):
     active_hash = imagehash.average_hash(im)
     return active_hash
 
-def image_hash_reference():
+def train_card_classifier():
     files = glob('./card_images_no_tooltip/*')
     names = []
     hashes = []
@@ -616,10 +618,10 @@ if __name__ == "__main__":
     time.sleep(3)
     
     # uncomment to take screenshot for development
-    take_screenshot()
+    # take_screenshot()
     
     # uncomment to create image hash references based on image library of cards
-    # width, height, names, hashes = image_hash_reference()
+    # width, height, names, hashes = train_card_classifier()
     # pickle.dump(width, open('./classifier/width.p', 'wb'))
     # pickle.dump(height, open('./classifier/height.p', 'wb'))
     # pickle.dump(names, open('./classifier/names.p', 'wb'))
@@ -635,7 +637,7 @@ if __name__ == "__main__":
     # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # hsv_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
     
-    #identify_board()
+    identify_board()
     
     # # 493, 353 - 10, 89 = 483, 264
     # # 410, 229 - 10, 89 = 400, 140
