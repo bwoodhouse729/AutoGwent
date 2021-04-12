@@ -283,6 +283,8 @@ def identify_board():
     # Use cluster in upper left of card to identify card presence
     # Use left-most diamond as an indication of how many cards to expect
     
+    # TODO: Could restrict to units and artifacts for classification here
+    
     #image = cv2.imread('./development_screenshots/sample_board_9_cards.png')
     image = cv2.imread('./development_screenshots/sample_read_board.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
