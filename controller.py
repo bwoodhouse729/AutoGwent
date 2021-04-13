@@ -449,19 +449,21 @@ def identify_card(card):
     # Copy cardbacks from site
     
     # TODO: Identify card power
-      # Isolate pixels that stand out in diamond
+    # Isolate pixels that stand out in diamond
+    # Tried and failed with pytesseract
+    # Next attempt: Classify digits with imagehash?
+    # Need reference images from game for all powers <= 20 on every color background.
       
-      
-      # Mask white, red, or green number in upper left
-      # White: (187, 178, 156)
-      # Green: (118, 255, 121)
-      # Red: (255, 60, 60)
-      # Isolate digits, then classify each digit with imagehash
+    # Mask white, red, or green number in upper left
+    # White: (187, 178, 156)
+    # Green: (118, 255, 121)
+    # Red: (255, 60, 60)
+    # Isolate digits, then classify each digit with imagehash
       
     # isolate upper left of card
     h_fraction = 0.21
     v_fraction_upper = 0.06
-    v_fraction_lower = 0.25
+    v_fraction_lower = 0.27
     #v_fraction = # 0.31
     
     width = int(round(h_fraction * np.shape(card)[0]))
@@ -493,20 +495,24 @@ def identify_card(card):
     # plt.show()
     
     # Create custom kernel
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
-    # Perform closing (dilation followed by erosion)
-    mask = 255 - 255 * cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-    #mask = cv2.blur(mask, (2, 2))
+    # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
+    # # Perform closing (dilation followed by erosion)
+    # mask = 255 - 255 * cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    # #mask = cv2.blur(mask, (2, 2))
     
-    mask = np.stack((mask,)*3, axis=-1)
+    # mask = np.stack((mask,)*3, axis=-1)
     
-    #print(mask)
+    # #print(mask)
     
-    plt.imshow(mask)
-    plt.show()
+    # cv2.dilate(mask, (5, 5), mask)
     
-    text = pytesseract.image_to_string(mask, config='digits -psm 10')
-    print('OCR: ' + text.rstrip())
+    # # mask = cv2.resize(mask, (20, 10), interpolation = cv2.INTER_AREA)
+    
+    # plt.imshow(mask)
+    # plt.show()
+    
+    # text = pytesseract.image_to_string(mask, config='digits -psm 7')
+    # print('OCR: ' + text.rstrip())
     
     # TODO: Identify card armor
     # TODO: Identify card statuses
