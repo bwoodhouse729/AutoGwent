@@ -253,31 +253,31 @@ def classify_card_image(card):
     plt.show()
     
     # Improve classifications by using faction information from csv
-    factions = ['Monsters', 'Nilfgaard', 'Northern Realms', 'Scoia\'tael', 'Skellige', 'Syndicate']
-    rgb_colors = np.array([[[75, 22, 20], [22, 27, 29], [23, 51, 89], [51, 58, 17], [59, 47, 77], [83, 32, 0]]], np.float32)
-    #print(rgb_colors)
-    hsv_colors = cv2.cvtColor(rgb_colors, cv2.COLOR_RGB2HSV)
+    # factions = ['Monsters', 'Nilfgaard', 'Northern Realms', 'Scoia\'tael', 'Skellige', 'Syndicate']
+    # rgb_colors = np.array([[[75, 22, 20], [22, 27, 29], [23, 51, 89], [51, 58, 17], [59, 47, 77], [83, 32, 0]]], np.float32)
+    # #print(rgb_colors)
+    # hsv_colors = cv2.cvtColor(rgb_colors, cv2.COLOR_RGB2HSV)
     
-    # TODO: Identify faction from background color in diamond
-    x_percent = 10
-    y_percent = 5
+    # # TODO: Identify faction from background color in diamond
+    # x_percent = 10
+    # y_percent = 5
     
-    x = int(round(np.shape(card)[0] * x_percent / 100))
-    y = int(round(np.shape(card)[0] * y_percent / 100))
+    # x = int(round(np.shape(card)[0] * x_percent / 100))
+    # y = int(round(np.shape(card)[0] * y_percent / 100))
     
-    rgb_faction = card[x:x+1, y:y+1, :]
-    hsv_faction = cv2.cvtColor(rgb_faction, cv2.COLOR_RGB2HSV)
-    #print(hsv_faction)
+    # rgb_faction = card[x:x+1, y:y+1, :]
+    # hsv_faction = cv2.cvtColor(rgb_faction, cv2.COLOR_RGB2HSV)
+    # #print(hsv_faction)
     
-    best_faction = ''
-    min_distance = 10000
-    for i in range(len(factions)):
-        distance = np.linalg.norm(rgb_faction[0] - rgb_colors[0][i])
-        # distance = abs(hsv_faction[0][0][0] - hsv_colors[0][i][0])
-        if distance < min_distance:
-            best_faction = factions[i]
-            min_distance = distance
-    print(best_faction)
+    # best_faction = ''
+    # min_distance = 10000
+    # for i in range(len(factions)):
+    #     distance = np.linalg.norm(rgb_faction[0] - rgb_colors[0][i])
+    #     # distance = abs(hsv_faction[0][0][0] - hsv_colors[0][i][0])
+    #     if distance < min_distance:
+    #         best_faction = factions[i]
+    #         min_distance = distance
+    # print(best_faction)
     
     fraction_x = 0.2
     fraction_y = 0.25
@@ -287,17 +287,17 @@ def classify_card_image(card):
     #image = cv2.resize(image, (width, height), interpolation = cv2.INTER_AREA)
     
     im = Image.fromarray(image)
-    active_hash = str(imagehash.phash(im))
+    active_hash = imagehash.phash(im)
     
     min_distance = 1000000000
     best_match = ''
     for i in range(len(ref_hashes)):
-        current_hash = str(ref_hashes[i])
+        current_hash = ref_hashes[i]
         distance = 0
-        for j in range(len(active_hash)):
-            if active_hash[j] != current_hash[j]:
-                distance += 1
-        # distance = abs(active_hash - current_hash)
+        # for j in range(len(active_hash)):
+        #     if active_hash[j] != current_hash[j]:
+        #         distance += 1
+        distance = abs(active_hash - current_hash)
         if distance < min_distance:
             min_distance = distance
             best_match = ref_names[i]
@@ -323,8 +323,7 @@ def identify_board():
     # TODO: Could restrict to units and artifacts for classification here
     
     #image = cv2.imread('./development_screenshots/sample_board_9_cards.png')
-    #image = cv2.imread('./development_screenshots/sample_board_8_cards.png')
-    image = cv2.imread('./development_screenshots/sample_read_board.png')
+    image = cv2.imread('./development_screenshots/sample_board_8_cards.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     diamond_heights = [134, 267, 422, 589]
@@ -341,7 +340,7 @@ def identify_board():
                         [[252, 444], [252, 545], [252, 647], [252, 748], [252, 850], [252, 952], [252, 1053], [252, 1154], [252, 1253]],
                         [[406, 422], [406, 530], [406, 637], [406, 745], [406, 852], [406, 958], [406, 1065], [406, 1172], [406, 1279]],
                         [[570, 403], [570, 516], [570, 627], [570, 741], [570, 854], [570, 967], [570, 1079], [570, 1191], [570, 1305]]]
-    lower_lefts_odd = [[[253, 349], [253, 450], [239, 551], [239, 652], [239, 753], [239, 853], [239, 955], [239, 1055], [239, 1156]],
+    lower_lefts_odd = [[[239, 349], [239, 450], [239, 551], [239, 652], [239, 753], [239, 853], [239, 955], [239, 1055], [239, 1156]],
                         [[384, 326], [384, 432], [384, 538], [384, 644], [384, 750], [384, 856], [384, 962], [384, 1068], [384, 1174]],
                         [[554, 298], [554, 411], [554, 523], [554, 635], [554, 747], [554, 859], [554, 971], [554, 1083], [554, 1195]],
                         [[733, 270], [733, 389], [733, 507], [733, 625], [733, 744], [733, 861], [733, 980], [733, 1099], [733, 1218]]]
@@ -352,7 +351,7 @@ def identify_board():
     upper_lefts_even = [[[121, 414], [121, 511], [121, 608], [121, 702], [121, 801], [121, 897], [121, 994], [121, 1091]],
                         [[252, 395], [252, 497], [252, 598], [252, 699], [252, 801], [252, 902], [252, 1004], [252, 1106]],
                         [[407, 374], [407, 479], [407, 586], [407, 694], [407, 801], [407, 908], [407, 1015], [407, 1123]],
-                        [[569, 360], [569, 462], [569, 576], [569, 688], [569, 801], [569, 914], [569, 1027], [569, 1139]]]
+                        [[569, 348], [569, 462], [569, 576], [569, 688], [569, 801], [569, 914], [569, 1027], [569, 1139]]]
     upper_rights_even = [[[121, 505], [121, 603], [121, 700], [121, 796], [121, 893], [121, 990], [121, 1086], [121, 1182]],
                         [[252, 491], [252, 593], [252, 694], [252, 795], [252, 897], [252, 999], [252, 1101], [252, 1202]],
                         [[407, 474], [407, 582], [407, 689], [407, 797], [407, 904], [407, 1010], [407, 1116], [407, 1224]],
@@ -393,19 +392,19 @@ def identify_board():
             for i in range(estimated_count):
                 card = image[upper_lefts_even[row][start + i][0]:lower_rights_even[row][start + i][0], upper_lefts_even[row][start + i][1]:lower_rights_even[row][start + i][1], :]
                 
-                plt.imshow(card)
-                plt.show()
+                # plt.imshow(card)
+                # plt.show()
                 
                 # Straighten and resize card before classification
                 corners = [(upper_lefts_even[row][start + i][1], upper_lefts_even[row][start + i][0]),
                            (upper_rights_even[row][start + i][1], upper_rights_even[row][start + i][0]),
                            (lower_rights_even[row][start + i][1], lower_rights_even[row][start + i][0]),
                            (lower_lefts_even[row][start + i][1], lower_lefts_even[row][start + i][0])]
-                target = [(0, 0), (249, 0), (249, 357), (0, 357)]
+                target = [(0, 0), (100, 0), (100, 150), (0, 150)]
                 H, _ = cv2.findHomography(np.array(corners), np.array(target))
                 
                 # Apply matrix H to source image.
-                card = cv2.warpPerspective(image, H, (249, 357))
+                card = cv2.warpPerspective(image, H, (100, 150))
                 
                 # print('Reshaped')
                 # plt.imshow(card)
@@ -421,8 +420,8 @@ def identify_board():
             for i in range(estimated_count):                
                 card = image[upper_lefts_odd[row][start + i][0]:lower_rights_odd[row][start + i][0], upper_lefts_odd[row][start + i][1]:lower_rights_odd[row][start + i][1], :]
                 
-                plt.imshow(card)
-                plt.show()
+                # plt.imshow(card)
+                # plt.show()
                 
                 # Straighten and resize card before classification
                 corners = [(upper_lefts_odd[row][start + i][1], upper_lefts_odd[row][start + i][0]),
@@ -443,7 +442,10 @@ def identify_board():
                 print(name)
     
     # TODO: Recognize the back of cards as well for traps
+    # Copy cardbacks from site
     # TODO: Identify card power
+      # Mask white, red, or green number in upper left
+      # Isolate digits, then classify each digit with imagehash
     # TODO: Identify card armor
     # TODO: Identify card statuses
     # TODO: Identify presence of card order ability
@@ -696,54 +698,20 @@ if __name__ == "__main__":
     # take_screenshot()
     
     # uncomment to create image hash references based on image library of cards
-    names, hashes = train_card_classifier()
-    # pickle.dump(width, open('./classifier/width.p', 'wb'))
-    # pickle.dump(height, open('./classifier/height.p', 'wb'))
-    pickle.dump(names, open('./classifier/names.p', 'wb'))
-    pickle.dump(hashes, open('./classifier/hashes.p', 'wb'))
+    # names, hashes = train_card_classifier()
+    # pickle.dump(names, open('./classifier/names.p', 'wb'))
+    # pickle.dump(hashes, open('./classifier/hashes.p', 'wb'))
     
     # load classifier parameters from files
-    # width = pickle.load(open('./classifier/width.p', 'rb'))
-    # height = pickle.load(open('./classifier/height.p', 'rb'))
     ref_names = pickle.load(open('./classifier/names.p', 'rb'))
     ref_hashes = pickle.load(open('./classifier/hashes.p', 'rb'))
     
-    # image = cv2.imread('./development_screenshots/sample_board_8_cards.png')
-    # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    # hsv_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-    
     identify_board()
-    
-    # # 493, 353 - 10, 89 = 483, 264
-    # # 410, 229 - 10, 89 = 400, 140
-    # #card = image[140:264, 400:483]
-    # color = hsv_image[263:264, 482:483]
-    # print(color[0][0])
-    # # plt.imshow(color)
-    # # plt.show()
-    # lower_gold = np.array([21, 50, 100])
-    # upper_gold = np.array([25, 230, 255])
-    
-    # mask = cv2.inRange(hsv_image, lower_gold, upper_gold)
-    # plt.imshow(mask)
-    # plt.show()
-    
-    # name = classify_card_image(card)
-    # print(name)
     
     #action_hard_pass()
     
     # analyze_game_state()
     # make_move()
-    
-    # # start = time.time()
-    # clf, width, height, names = train_decision_tree()
-    # # end = time.time()
-    # # print(int(end - start))
-    # pickle.dump(clf, open('./classifier.p', 'wb'))
-    # pickle.dump(width, open('./width.p', 'wb'))
-    # pickle.dump(height, open('./height.p', 'wb'))
-    # pickle.dump(names, open('./names.p', 'wb'))
     
     # infinite loop to keep playing more games
     # while True:
