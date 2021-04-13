@@ -287,17 +287,17 @@ def classify_card_image(card):
     #image = cv2.resize(image, (width, height), interpolation = cv2.INTER_AREA)
     
     im = Image.fromarray(image)
-    active_hash = imagehash.phash(im)
+    active_hash = str(imagehash.phash(im))
     
     min_distance = 1000000000
     best_match = ''
     for i in range(len(ref_hashes)):
-        current_hash = ref_hashes[i]
-        # distance = 0
-        # for j in range(len(active_hash)):
-        #     if active_hash[j] != current_hash[j]:
-        #         distance += 1
-        distance = abs(active_hash - current_hash)
+        current_hash = str(ref_hashes[i])
+        distance = 0
+        for j in range(len(active_hash)):
+            if active_hash[j] != current_hash[j]:
+                distance += 1
+        # distance = abs(active_hash - current_hash)
         if distance < min_distance:
             min_distance = distance
             best_match = ref_names[i]
