@@ -451,8 +451,8 @@ def identify_card(card):
     # TODO: Identify card power
     # Isolate pixels that stand out in diamond
     # Tried and failed with pytesseract
-    # Next attempt: Classify digits with imagehash?
-    # Need reference images from game for all powers <= 20 on every color background.
+    # Next attempt: Take reference images from folder
+    # 
       
     # Mask white, red, or green number in upper left
     # White: (187, 178, 156)
@@ -732,6 +732,14 @@ def train_card_classifier():
         hashes.append(active_hash)
         
     return names, hashes
+
+def train_digit_classifier():
+    digits = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    for digit in digits:
+        file = './power_recognition/' + str(digit) + '.png'
+        
+        # TODO: Load image, focus on diamond, extract white part, hash it, save it
+        
 
 def transition_game_select_play_standard():
     # click to play a standard game, then wait for mulligan screen
