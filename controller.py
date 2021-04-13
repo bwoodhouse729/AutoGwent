@@ -102,6 +102,7 @@ class Card:
 
 ref_names = []
 ref_hashes = []
+digit_hashes = []
 
 mulligan_names = []
 mulligan_centers = []
@@ -448,7 +449,9 @@ def identify_card(card):
     # TODO: Recognize the back of cards as well for traps
     # Copy cardbacks from site
     
-    # TODO: Identify card power
+    # Identify card power
+    power = ''
+    
     # Isolate pixels that stand out in diamond
     # Tried and failed with pytesseract
     # Next attempt: Take reference images from folder
@@ -461,23 +464,26 @@ def identify_card(card):
     # Isolate digits, then classify each digit with imagehash
       
     # isolate upper left of card
-    h_fraction = 0.21
-    v_fraction_upper = 0.06
-    v_fraction_lower = 0.27
+    h_fraction_left = 0.05
+    h_fraction_right = 0.17
+    v_fraction_upper = 0.04
+    v_fraction_lower = 0.26
     #v_fraction = # 0.31
     
-    width = int(round(h_fraction * np.shape(card)[0]))
+    width_left = int(round(h_fraction_left * np.shape(card)[0]))
+    width_right = int(round(h_fraction_right * np.shape(card)[0]))
     #height = int(round(v_fraction * np.shape(card)[1]))
     height_upper = int(round(v_fraction_upper * np.shape(card)[1]))
     height_lower = int(round(v_fraction_lower * np.shape(card)[1]))
     
-    upper_left_card = card[height_upper:height_lower, 0:width, :]
+    upper_left_card = card[height_upper:height_lower, width_left:width_right, :]
     
     plt.imshow(upper_left_card)
     plt.show()
     
-    lower_white = (170, 160, 140)
-    upper_white = (210, 200, 170)
+    #lower_white = (170, 160, 140)
+    lower_white = (100, 100, 100)
+    upper_white = (255, 255, 255)
     
     lower_green = (50, 200, 50)
     upper_green = (200, 256, 200)
@@ -489,7 +495,94 @@ def identify_card(card):
     mask_2 = cv2.inRange(upper_left_card, lower_green, upper_green)
     mask_3 = cv2.inRange(upper_left_card, lower_red, upper_red)
     
-    mask = np.logical_or(mask_1, mask_2, mask_3)
+    mask = 255 - 255 * np.logical_or(mask_1, mask_2, mask_3)
+    
+    mask = np.stack((mask,)*3, axis=-1)
+    
+    plt.imshow(mask)
+    plt.show()
+    
+    # TODO: Remove corner pieces of the mask
+    
+    # Identify number of digits by scanning vertically left-to-right
+    digit_count = 0
+    hit = False
+    previous_hit = False
+    digit_starts = []
+    digit_ends = []
+    for i in range(np.shape(mask)[1]):
+        active_sum = np.sum(255 - mask[:, i, 0])
+        hit = (active_sum >= 5 * 255)
+        if hit and not previous_hit:
+            digit_count += 1
+            digit_starts.append(i)
+        if not hit and previous_hit:
+            digit_ends.append(i)
+        previous_hit = hit
+        #print(i, hit)
+    
+    # print(str(digit_count) + ' digit(s)')
+    # print(digit_starts, digit_ends)
+    
+    for i in range(len(digit_starts)):
+        
+        # Isolate appropriate digit as mask
+        # print(np.shape(mask), i, digit_starts[i], digit_ends[i])
+        mask2 = mask[:, digit_starts[i]:digit_ends[i], :]
+    
+        # Resize, append with zeros
+    
+        # print(np.shape(mask2))
+    
+        plt.imshow(mask2)
+        plt.show()
+        
+        im = Image.fromarray(mask2)
+        current_hash = imagehash.phash(im)
+        
+        max_distance = 10000000000
+        best_fit = 0
+        for digit in range(10):
+            distance = abs(digit_hashes[digit] - current_hash)
+            if distance < max_distance:
+                best_fit = digit
+                max_distance = distance
+        
+        power += str(best_fit)
+        
+    power = int(power)
+    print(power)
+    
+    # # isolate upper left of card
+    # h_fraction = 0.21
+    # v_fraction_upper = 0.06
+    # v_fraction_lower = 0.27
+    # #v_fraction = # 0.31
+    
+    # width = int(round(h_fraction * np.shape(card)[0]))
+    # #height = int(round(v_fraction * np.shape(card)[1]))
+    # height_upper = int(round(v_fraction_upper * np.shape(card)[1]))
+    # height_lower = int(round(v_fraction_lower * np.shape(card)[1]))
+    
+    # upper_left_card = card[height_upper:height_lower, 0:width, :]
+    
+    # plt.imshow(upper_left_card)
+    # plt.show()
+    
+    # lower_white = (170, 160, 140)
+    # upper_white = (210, 200, 170)
+    
+    # lower_green = (50, 200, 50)
+    # upper_green = (200, 256, 200)
+    
+    # lower_red = (250, 50, 50)
+    # upper_red = (256, 70, 70)
+    
+    # mask_1 = cv2.inRange(upper_left_card, lower_white, upper_white)
+    # mask_2 = cv2.inRange(upper_left_card, lower_green, upper_green)
+    # mask_3 = cv2.inRange(upper_left_card, lower_red, upper_red)
+    
+    # mask = np.logical_or(mask_1, mask_2, mask_3)
     
     # plt.imshow(1 - mask, cmap='gray')
     # plt.show()
@@ -734,13 +827,62 @@ def train_card_classifier():
     return names, hashes
 
 def train_digit_classifier():
-    digits = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    hashes = []
     for digit in digits:
+        if digit == 0:
+            digit = 10
         file = './power_recognition/' + str(digit) + '.png'
         
-        # TODO: Load image, focus on diamond, extract white part, hash it, save it
+        # Load image, focus on diamond, extract white part, hash it, save it
+        image = cv2.imread(file)
+        card = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
-
+        # isolate upper left of card
+        h_fraction_left = 0.08
+        h_fraction_right = 0.15
+        if digit == 10:
+            h_fraction_left = 0.10
+            h_fraction_right = 0.17
+        v_fraction_upper = 0.09
+        v_fraction_lower = 0.27
+        #v_fraction = # 0.31
+        
+        width_left = int(round(h_fraction_left * np.shape(card)[0]))
+        width_right = int(round(h_fraction_right * np.shape(card)[0]))
+        #height = int(round(v_fraction * np.shape(card)[1]))
+        height_upper = int(round(v_fraction_upper * np.shape(card)[1]))
+        height_lower = int(round(v_fraction_lower * np.shape(card)[1]))
+        
+        upper_left_card = card[height_upper:height_lower, width_left:width_right, :]
+        
+        # plt.imshow(upper_left_card)
+        # plt.show()
+        
+        lower_white = (170, 160, 140)
+        upper_white = (255, 255, 255)
+        
+        # lower_green = (50, 200, 50)
+        # upper_green = (200, 256, 200)
+        
+        # lower_red = (250, 50, 50)
+        # upper_red = (256, 70, 70)
+        
+        mask = cv2.inRange(upper_left_card, lower_white, upper_white)
+        
+        mask = 255 - mask
+        
+        mask = np.stack((mask,)*3, axis=-1)
+        
+        plt.imshow(mask)
+        plt.show()
+        
+        im = Image.fromarray(mask)
+        active_hash = imagehash.phash(im)
+        hashes.append(active_hash)
+        
+    return hashes
+        
 def transition_game_select_play_standard():
     # click to play a standard game, then wait for mulligan screen
     
@@ -787,6 +929,8 @@ if __name__ == "__main__":
     # load classifier parameters from files
     ref_names = pickle.load(open('./classifier/names.p', 'rb'))
     ref_hashes = pickle.load(open('./classifier/hashes.p', 'rb'))
+    
+    digit_hashes = train_digit_classifier()
     
     identify_board()
     
