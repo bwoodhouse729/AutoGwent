@@ -424,11 +424,11 @@ def identify_board():
                            (upper_rights_odd[row][start + i][1], upper_rights_odd[row][start + i][0]),
                            (lower_rights_odd[row][start + i][1], lower_rights_odd[row][start + i][0]),
                            (lower_lefts_odd[row][start + i][1], lower_lefts_odd[row][start + i][0])]
-                target = [(0, 0), (249, 0), (249, 357), (0, 357)]
+                target = [(0, 0), (100, 0), (100, 150), (0, 150)]
                 H, _ = cv2.findHomography(np.array(corners), np.array(target))
                 
                 # Apply matrix H to source image.
-                card = cv2.warpPerspective(image, H, (249, 357))
+                card = cv2.warpPerspective(image, H, (100, 150))
                 
                 # print('Reshaped')
                 # plt.imshow(card)
@@ -630,6 +630,8 @@ def train_card_classifier():
         #print(name)
         image = cv2.imread(file)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        image = cv2.resize(image, (100, 150), interpolation = cv2.INTER_AREA)
         
         fraction_x = 0.2
         fraction_y = 0.25
