@@ -251,8 +251,32 @@ def choose_mulligan():
     return 0
 
 def classify_card_image(card):
+    # Improve classifications by using faction information from csv
+    factions = ['Monsters', 'Nilfgaard', 'Northern Realms', 'Scoia\'tael', 'Skellige', 'Syndicate']
+    rgb_colors = np.array([[[75, 22, 20], [22, 27, 29], [23, 51, 89], [51, 58, 17], [59, 47, 77], [83, 32, 0]]], np.float32)
+    #print(rgb_colors)
+    hsv_colors = cv2.cvtColor(rgb_colors, cv2.COLOR_RGB2HSV)
     
-    # TODO: Improve classifications by using faction information from csv
+    # TODO: Identify faction from background color in diamond
+    x_percent = 10
+    y_percent = 5
+    
+    x = int(round(np.shape(card)[0] * x_percent / 100))
+    y = int(round(np.shape(card)[0] * y_percent / 100))
+    
+    rgb_faction = card[x:x+1, y:y+1, :]
+    hsv_faction = cv2.cvtColor(rgb_faction, cv2.COLOR_RGB2HSV)
+    #print(hsv_faction)
+    
+    best_faction = ''
+    min_distance = 10000
+    for i in range(len(factions)):
+        distance = np.linalg.norm(rgb_faction[0] - rgb_colors[0][i])
+        # distance = abs(hsv_faction[0][0][0] - hsv_colors[0][i][0])
+        if distance < min_distance:
+            best_faction = factions[i]
+            min_distance = distance
+    print(best_faction)
     
     active_hash = image_hash(width, height, card)
         
@@ -286,7 +310,8 @@ def identify_board():
     # TODO: Could restrict to units and artifacts for classification here
     
     #image = cv2.imread('./development_screenshots/sample_board_9_cards.png')
-    image = cv2.imread('./development_screenshots/sample_read_board.png')
+    image = cv2.imread('./development_screenshots/sample_board_8_cards.png')
+    #image = cv2.imread('./development_screenshots/sample_read_board.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     diamond_heights = [134, 267, 422, 589]
@@ -314,19 +339,19 @@ def identify_board():
     upper_lefts_even = [[[121, 414], [121, 511], [121, 608], [121, 702], [121, 801], [121, 897], [121, 994], [121, 1091]],
                         [[252, 395], [252, 497], [252, 598], [252, 699], [252, 801], [252, 902], [252, 1004], [252, 1106]],
                         [[407, 374], [407, 479], [407, 586], [407, 694], [407, 801], [407, 908], [407, 1015], [407, 1123]],
-                        [[569, 360], [569, ], [569, ], [569, ], [569, ], [569, ], [569, ], [569, ]]]
+                        [[569, 360], [569, 462], [569, 576], [569, 688], [569, 801], [569, 914], [569, 1027], [569, 1139]]]
     upper_rights_even = [[[121, 505], [121, 603], [121, 700], [121, 796], [121, 893], [121, 990], [121, 1086], [121, 1182]],
                         [[252, 491], [252, 593], [252, 694], [252, 795], [252, 897], [252, 999], [252, 1101], [252, 1202]],
                         [[407, 474], [407, 582], [407, 689], [407, 797], [407, 904], [407, 1010], [407, 1116], [407, 1224]],
-                        [[569, ], [569, ], [569, ], [569, ], [569, ], [569, ], [569, ], [569, ]]]
+                        [[569, 458], [569, 570], [569, 683], [569, 796], [569, 908], [569, 1021], [569, 1134], [569, 1247]]]
     lower_lefts_even = [[[240, 398], [240, 498], [240, 599], [240, 699], [240, 800], [240, 901], [240, 1002], [240, 1103]],
                         [[384, 376], [384, 483], [384, 589], [384, 695], [384, 801], [384, 906], [384, 1012], [384, 1119]],
                         [[554, 352], [554, 465], [554, 577], [554, 688], [554, 801], [554, 912], [554, 1024], [554, 1136]],
-                        [[734, 327], [734, ], [734, ], [734, ], [734, ], [734, ], [734, ], [734, ]]]
+                        [[734, 327], [734, 445], [734, 563], [734, 683], [734, 801], [734, 919], [734, 1037], [734, 1156]]]
     lower_rights_even = [[[240, 492], [240, 594], [240, 695], [240, 796], [240, 896], [240, 997], [240, 1098], [240, 1200]],
                         [[384, 477], [384, 583], [384, 690], [384, 796], [384, 901], [384, 1007], [384, 1113], [384, 1220]],
                         [[554, 460], [554, 573], [554, 684], [554, 797], [554, 908], [554, 1020], [554, 1132], [554, 1246]],
-                        [[734, ], [734, ], [734, ], [734, ], [734, ], [734, ], [734, ], [734, ]]]
+                        [[734, 441], [734, 559], [734, 678], [734, 797], [734, 915], [734, 1033], [734, 1152], [734, 1270]]]
     
     for row in range(4):
         
@@ -348,15 +373,17 @@ def identify_board():
                 #print(estimated_count)
                 break
         
-        # TODO: Recover all cards based on estimated count, then identify them
+        # Recover all cards based on estimated count, then identify them
         if estimated_count % 2 == 0 and estimated_count > 0:
             # start from coordinates of all 8 cards, pick out center ones appropriately
-            start = 4.0 - (estimated_count / 2)
+            start = 4 - (estimated_count // 2)
             for i in range(estimated_count):
-                #card = image[upper_lefts_even[row][start + i][0]:lower_rights_even[row][start + i][0], upper_lefts_even[row][start + i][1]:lower_rights_even[row][start + i][1], :]
-                # plt.imshow(card)
-                # plt.show()
-                pass
+                card = image[upper_lefts_even[row][start + i][0]:lower_rights_even[row][start + i][0], upper_lefts_even[row][start + i][1]:lower_rights_even[row][start + i][1], :]
+                plt.imshow(card)
+                plt.show()
+                
+                name = classify_card_image(card)
+                print(name)
         else: # estimated_count % 2 == 1
             # start from coordinates of all 9 cards, pick out center ones appropriately
             start = 4 - ((estimated_count - 1) // 2)
@@ -369,7 +396,7 @@ def identify_board():
                 name = classify_card_image(card)
                 print(name)
                 
-        # TODO: Consider straightening card
+        # TODO: Try straightening card before classification
     
     # TODO: Recognize the back of cards as well for traps
     # TODO: Identify card power
