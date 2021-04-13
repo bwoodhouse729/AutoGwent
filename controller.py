@@ -248,32 +248,36 @@ def choose_mulligan():
     return 0
 
 def classify_card_image(card):
+    
+    plt.imshow(card)
+    plt.show()
+    
     # Improve classifications by using faction information from csv
-    # factions = ['Monsters', 'Nilfgaard', 'Northern Realms', 'Scoia\'tael', 'Skellige', 'Syndicate']
-    # rgb_colors = np.array([[[75, 22, 20], [22, 27, 29], [23, 51, 89], [51, 58, 17], [59, 47, 77], [83, 32, 0]]], np.float32)
-    # #print(rgb_colors)
-    # hsv_colors = cv2.cvtColor(rgb_colors, cv2.COLOR_RGB2HSV)
+    factions = ['Monsters', 'Nilfgaard', 'Northern Realms', 'Scoia\'tael', 'Skellige', 'Syndicate']
+    rgb_colors = np.array([[[75, 22, 20], [22, 27, 29], [23, 51, 89], [51, 58, 17], [59, 47, 77], [83, 32, 0]]], np.float32)
+    #print(rgb_colors)
+    hsv_colors = cv2.cvtColor(rgb_colors, cv2.COLOR_RGB2HSV)
     
-    # # TODO: Identify faction from background color in diamond
-    # x_percent = 10
-    # y_percent = 5
+    # TODO: Identify faction from background color in diamond
+    x_percent = 10
+    y_percent = 5
     
-    # x = int(round(np.shape(card)[0] * x_percent / 100))
-    # y = int(round(np.shape(card)[0] * y_percent / 100))
+    x = int(round(np.shape(card)[0] * x_percent / 100))
+    y = int(round(np.shape(card)[0] * y_percent / 100))
     
-    # rgb_faction = card[x:x+1, y:y+1, :]
-    # hsv_faction = cv2.cvtColor(rgb_faction, cv2.COLOR_RGB2HSV)
-    # #print(hsv_faction)
+    rgb_faction = card[x:x+1, y:y+1, :]
+    hsv_faction = cv2.cvtColor(rgb_faction, cv2.COLOR_RGB2HSV)
+    #print(hsv_faction)
     
-    # best_faction = ''
-    # min_distance = 10000
-    # for i in range(len(factions)):
-    #     distance = np.linalg.norm(rgb_faction[0] - rgb_colors[0][i])
-    #     # distance = abs(hsv_faction[0][0][0] - hsv_colors[0][i][0])
-    #     if distance < min_distance:
-    #         best_faction = factions[i]
-    #         min_distance = distance
-    # print(best_faction)
+    best_faction = ''
+    min_distance = 10000
+    for i in range(len(factions)):
+        distance = np.linalg.norm(rgb_faction[0] - rgb_colors[0][i])
+        # distance = abs(hsv_faction[0][0][0] - hsv_colors[0][i][0])
+        if distance < min_distance:
+            best_faction = factions[i]
+            min_distance = distance
+    print(best_faction)
     
     fraction_x = 0.2
     fraction_y = 0.25
@@ -282,16 +286,17 @@ def classify_card_image(card):
     # resize image
     #image = cv2.resize(image, (width, height), interpolation = cv2.INTER_AREA)
     
-    plt.imshow(image)
-    plt.show()
-    
     im = Image.fromarray(image)
-    active_hash = imagehash.average_hash(im)
+    active_hash = imagehash.phash(im)
     
     min_distance = 1000000000
     best_match = ''
     for i in range(len(ref_hashes)):
         current_hash = ref_hashes[i]
+        # distance = 0
+        # for j in range(len(active_hash)):
+        #     if active_hash[j] != current_hash[j]:
+        #         distance += 1
         distance = abs(active_hash - current_hash)
         if distance < min_distance:
             min_distance = distance
@@ -554,7 +559,7 @@ def identify_mulligan_choices(width, height, names, hashes):
         #image = cv2.resize(image, (width, height), interpolation = cv2.INTER_AREA)
         
         im = Image.fromarray(image)
-        active_hash = imagehash.average_hash(im)
+        active_hash = imagehash.phash(im)
         
         min_distance = 1000000000
         best_match = ''
@@ -646,15 +651,15 @@ def train_card_classifier():
         #     # resize image
         #     image = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
         
-        if 'an craite longship' in name:
-            plt.imshow(image)
-            plt.show()
+        # if 'an craite longship' in name:
+        #     plt.imshow(image)
+        #     plt.show()
         
         # print()
         # print()
         
         im = Image.fromarray(image)
-        active_hash = imagehash.average_hash(im)
+        active_hash = imagehash.phash(im)
         hashes.append(active_hash)
         
     return names, hashes
