@@ -34,6 +34,7 @@ import numpy as np
 import pickle
 from PIL import Image
 import pyautogui
+import pytesseract
 from sklearn import tree
 import time
 
@@ -249,9 +250,6 @@ def choose_mulligan():
 
 def classify_card_image(card):
     
-    plt.imshow(card)
-    plt.show()
-    
     # Improve classifications by using faction information from csv
     # factions = ['Monsters', 'Nilfgaard', 'Northern Realms', 'Scoia\'tael', 'Skellige', 'Syndicate']
     # rgb_colors = np.array([[[75, 22, 20], [22, 27, 29], [23, 51, 89], [51, 58, 17], [59, 47, 77], [83, 32, 0]]], np.float32)
@@ -410,8 +408,7 @@ def identify_board():
                 # plt.imshow(card)
                 # plt.show()
                 
-                name = classify_card_image(card)
-                print(name)
+                identify_card(card)
                 
         else: # estimated_count % 2 == 1
             # start from coordinates of all 9 cards, pick out center ones appropriately
@@ -438,20 +435,84 @@ def identify_board():
                 # plt.imshow(card)
                 # plt.show()
                 
-                name = classify_card_image(card)
-                print(name)
+                identify_card(card)
+
+def identify_card(card):
+    
+    plt.imshow(card)
+    plt.show()
+    
+    name = classify_card_image(card)
+    print(name)
     
     # TODO: Recognize the back of cards as well for traps
     # Copy cardbacks from site
+    
     # TODO: Identify card power
+      # Isolate pixels that stand out in diamond
+      
+      
       # Mask white, red, or green number in upper left
+      # White: (187, 178, 156)
+      # Green: (118, 255, 121)
+      # Red: (255, 60, 60)
       # Isolate digits, then classify each digit with imagehash
+      
+    # isolate upper left of card
+    h_fraction = 0.21
+    v_fraction_upper = 0.06
+    v_fraction_lower = 0.25
+    #v_fraction = # 0.31
+    
+    width = int(round(h_fraction * np.shape(card)[0]))
+    #height = int(round(v_fraction * np.shape(card)[1]))
+    height_upper = int(round(v_fraction_upper * np.shape(card)[1]))
+    height_lower = int(round(v_fraction_lower * np.shape(card)[1]))
+    
+    upper_left_card = card[height_upper:height_lower, 0:width, :]
+    
+    plt.imshow(upper_left_card)
+    plt.show()
+    
+    lower_white = (170, 160, 140)
+    upper_white = (210, 200, 170)
+    
+    lower_green = (50, 200, 50)
+    upper_green = (200, 256, 200)
+    
+    lower_red = (250, 50, 50)
+    upper_red = (256, 70, 70)
+    
+    mask_1 = cv2.inRange(upper_left_card, lower_white, upper_white)
+    mask_2 = cv2.inRange(upper_left_card, lower_green, upper_green)
+    mask_3 = cv2.inRange(upper_left_card, lower_red, upper_red)
+    
+    mask = np.logical_or(mask_1, mask_2, mask_3)
+    
+    # plt.imshow(1 - mask, cmap='gray')
+    # plt.show()
+    
+    # Create custom kernel
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
+    # Perform closing (dilation followed by erosion)
+    mask = 255 - 255 * cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    #mask = cv2.blur(mask, (2, 2))
+    
+    mask = np.stack((mask,)*3, axis=-1)
+    
+    #print(mask)
+    
+    plt.imshow(mask)
+    plt.show()
+    
+    text = pytesseract.image_to_string(mask, config='digits -psm 10')
+    print('OCR: ' + text.rstrip())
+    
     # TODO: Identify card armor
     # TODO: Identify card statuses
     # TODO: Identify presence of card order ability
     # TODO: Identify order ability status (gray, red, or green) if present
     # TODO: Identify number of order charges if present
-    pass
 
 def identify_card_choices():
     # identify cards to choose from in choice screen
@@ -690,6 +751,13 @@ def transition_home_game_select():
     time.sleep(2)
 
 if __name__ == "__main__":
+    
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Users\bwoodhouse\AppData\Local\Tesseract-OCR\tesseract.exe'
+    
+    # image = cv2.imread('./development_screenshots/tesseract_test.png')
+    # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # text = pytesseract.image_to_string(image) #, config='digits -psm 7')
+    # print('OCR: ' + text.rstrip())
     
     # pause to allow user to make Gwent window active
     time.sleep(3)
