@@ -99,9 +99,6 @@ class Card:
     def add_veil(self):
         self.veil = True
 
-# TODO: update width and height for various types of card images
-width = 0
-height = 0
 ref_names = []
 ref_hashes = []
 
@@ -252,34 +249,45 @@ def choose_mulligan():
 
 def classify_card_image(card):
     # Improve classifications by using faction information from csv
-    factions = ['Monsters', 'Nilfgaard', 'Northern Realms', 'Scoia\'tael', 'Skellige', 'Syndicate']
-    rgb_colors = np.array([[[75, 22, 20], [22, 27, 29], [23, 51, 89], [51, 58, 17], [59, 47, 77], [83, 32, 0]]], np.float32)
-    #print(rgb_colors)
-    hsv_colors = cv2.cvtColor(rgb_colors, cv2.COLOR_RGB2HSV)
+    # factions = ['Monsters', 'Nilfgaard', 'Northern Realms', 'Scoia\'tael', 'Skellige', 'Syndicate']
+    # rgb_colors = np.array([[[75, 22, 20], [22, 27, 29], [23, 51, 89], [51, 58, 17], [59, 47, 77], [83, 32, 0]]], np.float32)
+    # #print(rgb_colors)
+    # hsv_colors = cv2.cvtColor(rgb_colors, cv2.COLOR_RGB2HSV)
     
-    # TODO: Identify faction from background color in diamond
-    x_percent = 10
-    y_percent = 5
+    # # TODO: Identify faction from background color in diamond
+    # x_percent = 10
+    # y_percent = 5
     
-    x = int(round(np.shape(card)[0] * x_percent / 100))
-    y = int(round(np.shape(card)[0] * y_percent / 100))
+    # x = int(round(np.shape(card)[0] * x_percent / 100))
+    # y = int(round(np.shape(card)[0] * y_percent / 100))
     
-    rgb_faction = card[x:x+1, y:y+1, :]
-    hsv_faction = cv2.cvtColor(rgb_faction, cv2.COLOR_RGB2HSV)
-    #print(hsv_faction)
+    # rgb_faction = card[x:x+1, y:y+1, :]
+    # hsv_faction = cv2.cvtColor(rgb_faction, cv2.COLOR_RGB2HSV)
+    # #print(hsv_faction)
     
-    best_faction = ''
-    min_distance = 10000
-    for i in range(len(factions)):
-        distance = np.linalg.norm(rgb_faction[0] - rgb_colors[0][i])
-        # distance = abs(hsv_faction[0][0][0] - hsv_colors[0][i][0])
-        if distance < min_distance:
-            best_faction = factions[i]
-            min_distance = distance
-    print(best_faction)
+    # best_faction = ''
+    # min_distance = 10000
+    # for i in range(len(factions)):
+    #     distance = np.linalg.norm(rgb_faction[0] - rgb_colors[0][i])
+    #     # distance = abs(hsv_faction[0][0][0] - hsv_colors[0][i][0])
+    #     if distance < min_distance:
+    #         best_faction = factions[i]
+    #         min_distance = distance
+    # print(best_faction)
     
-    active_hash = image_hash(width, height, card)
-        
+    fraction_x = 0.2
+    fraction_y = 0.25
+    image = card[int(card.shape[0] * fraction_x):-int(card.shape[0] * fraction_x), int(card.shape[1] * fraction_y):-int(card.shape[1] * fraction_y)]
+    
+    # resize image
+    #image = cv2.resize(image, (width, height), interpolation = cv2.INTER_AREA)
+    
+    plt.imshow(image)
+    plt.show()
+    
+    im = Image.fromarray(image)
+    active_hash = imagehash.average_hash(im)
+    
     min_distance = 1000000000
     best_match = ''
     for i in range(len(ref_hashes)):
@@ -310,8 +318,8 @@ def identify_board():
     # TODO: Could restrict to units and artifacts for classification here
     
     #image = cv2.imread('./development_screenshots/sample_board_9_cards.png')
-    image = cv2.imread('./development_screenshots/sample_board_8_cards.png')
-    #image = cv2.imread('./development_screenshots/sample_read_board.png')
+    #image = cv2.imread('./development_screenshots/sample_board_8_cards.png')
+    image = cv2.imread('./development_screenshots/sample_read_board.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     diamond_heights = [134, 267, 422, 589]
@@ -379,24 +387,55 @@ def identify_board():
             start = 4 - (estimated_count // 2)
             for i in range(estimated_count):
                 card = image[upper_lefts_even[row][start + i][0]:lower_rights_even[row][start + i][0], upper_lefts_even[row][start + i][1]:lower_rights_even[row][start + i][1], :]
+                
                 plt.imshow(card)
                 plt.show()
                 
+                # Straighten and resize card before classification
+                corners = [(upper_lefts_even[row][start + i][1], upper_lefts_even[row][start + i][0]),
+                           (upper_rights_even[row][start + i][1], upper_rights_even[row][start + i][0]),
+                           (lower_rights_even[row][start + i][1], lower_rights_even[row][start + i][0]),
+                           (lower_lefts_even[row][start + i][1], lower_lefts_even[row][start + i][0])]
+                target = [(0, 0), (249, 0), (249, 357), (0, 357)]
+                H, _ = cv2.findHomography(np.array(corners), np.array(target))
+                
+                # Apply matrix H to source image.
+                card = cv2.warpPerspective(image, H, (249, 357))
+                
+                # print('Reshaped')
+                # plt.imshow(card)
+                # plt.show()
+                
                 name = classify_card_image(card)
                 print(name)
+                
         else: # estimated_count % 2 == 1
             # start from coordinates of all 9 cards, pick out center ones appropriately
             start = 4 - ((estimated_count - 1) // 2)
             #print(start)
             for i in range(estimated_count):                
                 card = image[upper_lefts_odd[row][start + i][0]:lower_rights_odd[row][start + i][0], upper_lefts_odd[row][start + i][1]:lower_rights_odd[row][start + i][1], :]
+                
                 plt.imshow(card)
                 plt.show()
                 
+                # Straighten and resize card before classification
+                corners = [(upper_lefts_odd[row][start + i][1], upper_lefts_odd[row][start + i][0]),
+                           (upper_rights_odd[row][start + i][1], upper_rights_odd[row][start + i][0]),
+                           (lower_rights_odd[row][start + i][1], lower_rights_odd[row][start + i][0]),
+                           (lower_lefts_odd[row][start + i][1], lower_lefts_odd[row][start + i][0])]
+                target = [(0, 0), (249, 0), (249, 357), (0, 357)]
+                H, _ = cv2.findHomography(np.array(corners), np.array(target))
+                
+                # Apply matrix H to source image.
+                card = cv2.warpPerspective(image, H, (249, 357))
+                
+                # print('Reshaped')
+                # plt.imshow(card)
+                # plt.show()
+                
                 name = classify_card_image(card)
                 print(name)
-                
-        # TODO: Try straightening card before classification
     
     # TODO: Recognize the back of cards as well for traps
     # TODO: Identify card power
@@ -507,7 +546,15 @@ def identify_mulligan_choices(width, height, names, hashes):
         # plt.show()
         # print(np.shape(card))
         
-        active_hash = image_hash(width, height, card)
+        fraction_x = 0.2
+        fraction_y = 0.25
+        image = card[int(card.shape[0] * fraction_x):-int(card.shape[0] * fraction_x), int(card.shape[1] * fraction_y):-int(card.shape[1] * fraction_y)]
+        
+        # resize image
+        #image = cv2.resize(image, (width, height), interpolation = cv2.INTER_AREA)
+        
+        im = Image.fromarray(image)
+        active_hash = imagehash.average_hash(im)
         
         min_distance = 1000000000
         best_match = ''
@@ -529,55 +576,6 @@ def identify_number_of_mulligans():
 def identify_scores():
     # identify total scores on the righthand side of the board
     pass
-
-def image_hash(width, height, image):
-    fraction_x = 0.2
-    fraction_y = 0.25
-    image = image[int(image.shape[0] * fraction_x):-int(image.shape[0] * fraction_x), int(image.shape[1] * fraction_y):-int(image.shape[1] * fraction_y)]
-    
-    # resize image
-    image = cv2.resize(image, (width, height), interpolation = cv2.INTER_AREA)
-    
-    im = Image.fromarray(image)
-    active_hash = imagehash.average_hash(im)
-    return active_hash
-
-def train_card_classifier():
-    files = glob('./card_images_no_tooltip/*')
-    names = []
-    hashes = []
-    for i in range(len(files)):
-        #print(i)
-        file = files[i]
-        name = file.split('\\')[-1][:-4]
-        names.append(name)
-        #print(name)
-        image = cv2.imread(file)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        
-        fraction_x = 0.2
-        fraction_y = 0.25
-        image = image[int(image.shape[0] * fraction_x):-int(image.shape[0] * fraction_x), int(image.shape[1] * fraction_y):-int(image.shape[1] * fraction_y)]
-        
-        scale_percent = 50 # percent of original size
-        width = int(image.shape[1] * scale_percent / 100)
-        height = int(image.shape[0] * scale_percent / 100)
-        dim = (width, height)
-          
-        # resize image
-        image = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
-        
-        # plt.imshow(image)
-        # plt.show()
-        
-        # print()
-        # print()
-        
-        im = Image.fromarray(image)
-        active_hash = imagehash.average_hash(im)
-        hashes.append(active_hash)
-        
-    return width, height, names, hashes
 
 def make_card_choice():
     # Select card(s) from card choice screen
@@ -620,6 +618,45 @@ def take_screenshot():
     myScreenshot = pyautogui.screenshot(region=(0, 31, 1600, 900))
     myScreenshot.save('./screenshots/active_screen.png')
 
+def train_card_classifier():
+    files = glob('./card_images_no_tooltip/*')
+    names = []
+    hashes = []
+    for i in range(len(files)):
+        #print(i)
+        file = files[i]
+        name = file.split('\\')[-1][:-4]
+        names.append(name)
+        #print(name)
+        image = cv2.imread(file)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        fraction_x = 0.2
+        fraction_y = 0.25
+        image = image[int(image.shape[0] * fraction_x):-int(image.shape[0] * fraction_x), int(image.shape[1] * fraction_y):-int(image.shape[1] * fraction_y)]
+        
+        # scale_percent = 100 # percent of original size
+        # if scale_percent != 100:
+        #     width = int(image.shape[1] * scale_percent / 100)
+        #     height = int(image.shape[0] * scale_percent / 100)
+        #     dim = (width, height)
+              
+        #     # resize image
+        #     image = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
+        
+        if 'an craite longship' in name:
+            plt.imshow(image)
+            plt.show()
+        
+        # print()
+        # print()
+        
+        im = Image.fromarray(image)
+        active_hash = imagehash.average_hash(im)
+        hashes.append(active_hash)
+        
+    return names, hashes
+
 def transition_game_select_play_standard():
     # click to play a standard game, then wait for mulligan screen
     
@@ -652,15 +689,15 @@ if __name__ == "__main__":
     # take_screenshot()
     
     # uncomment to create image hash references based on image library of cards
-    # width, height, names, hashes = train_card_classifier()
+    names, hashes = train_card_classifier()
     # pickle.dump(width, open('./classifier/width.p', 'wb'))
     # pickle.dump(height, open('./classifier/height.p', 'wb'))
-    # pickle.dump(names, open('./classifier/names.p', 'wb'))
-    # pickle.dump(hashes, open('./classifier/hashes.p', 'wb'))
+    pickle.dump(names, open('./classifier/names.p', 'wb'))
+    pickle.dump(hashes, open('./classifier/hashes.p', 'wb'))
     
     # load classifier parameters from files
-    width = pickle.load(open('./classifier/width.p', 'rb'))
-    height = pickle.load(open('./classifier/height.p', 'rb'))
+    # width = pickle.load(open('./classifier/width.p', 'rb'))
+    # height = pickle.load(open('./classifier/height.p', 'rb'))
     ref_names = pickle.load(open('./classifier/names.p', 'rb'))
     ref_hashes = pickle.load(open('./classifier/hashes.p', 'rb'))
     
