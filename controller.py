@@ -28,6 +28,11 @@ import cv2
 from glob import glob
 import imagehash
 import imageio
+from keras.datasets import mnist
+from keras.models import load_model
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
+from keras.utils import to_categorical
 from matplotlib import cm
 from matplotlib import pyplot as plt
 import numpy as np
@@ -302,6 +307,16 @@ def classify_card_image(card):
             best_match = ref_names[i]
     
     return best_match
+
+def classify_digit_keras(image):
+    model = load_model("./classifier/keras_model.h5")
+
+    # TODO: reshape image if necessary, 28 x 28
+    
+
+    # predict digit
+    prediction = model.predict(image)
+    return prediction.argmax()
 
 def end_game():
     # click in a few places to move back to primary menu
@@ -882,6 +897,60 @@ def train_digit_classifier():
         hashes.append(active_hash)
         
     return hashes
+
+def train_keras_digit_classifier():
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    # index = 35
+    # print(y_train[index])
+    # plt.imshow(x_train[index], cmap='Greys')
+    # plt.show()
+    # print(x_train.shape, x_test.shape)
+    
+    # save input image dimensions
+    img_rows, img_cols = 28, 28
+    
+    x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
+    x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
+    
+    x_train = x_train / 255
+    x_test = x_test / 255
+    
+    num_classes = 10
+
+    y_train = to_categorical(y_train, num_classes)
+    y_test = to_categorical(y_test, num_classes)
+    
+    model = Sequential()
+    model.add(Conv2D(32, kernel_size=(3, 3),
+     activation='relu',
+     input_shape=(img_rows, img_cols, 1)))
+    model.add(Conv2D(64, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+    model.add(Flatten())
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(num_classes, activation='softmax'))
+    
+    # model.compile(loss='sparse_categorical_crossentropy',
+    #   optimizer='adam',
+    #   metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy',
+      optimizer='adam',
+      metrics=['accuracy'])
+    
+    batch_size = 128
+    epochs = 10
+    
+    model.fit(x_train, y_train,
+              batch_size=batch_size,
+              epochs=epochs,
+              verbose=1,
+              validation_data=(x_test, y_test))
+    score = model.evaluate(x_test, y_test, verbose=0)
+    print('Test loss:', score[0])
+    print('Test accuracy:', score[1])
+    model.save("./classifier/keras_model.h5")
         
 def transition_game_select_play_standard():
     # click to play a standard game, then wait for mulligan screen
@@ -930,9 +999,11 @@ if __name__ == "__main__":
     ref_names = pickle.load(open('./classifier/names.p', 'rb'))
     ref_hashes = pickle.load(open('./classifier/hashes.p', 'rb'))
     
-    digit_hashes = train_digit_classifier()
+    train_keras_digit_classifier()
     
-    identify_board()
+    #digit_hashes = train_digit_classifier()
+    
+    #identify_board()
     
     #action_hard_pass()
     
