@@ -311,8 +311,11 @@ def classify_card_image(card):
 def classify_digit_keras(image):
     model = load_model("./classifier/keras_model.h5")
 
-    # TODO: reshape image if necessary, 28 x 28
+    img_rows = 28
+    img_cols = 28
+    image = image.reshape(1, img_rows, img_cols, 1)
     
+    image = image / 255
 
     # predict digit
     prediction = model.predict(image)
@@ -492,81 +495,99 @@ def identify_card(card):
     height_lower = int(round(v_fraction_lower * np.shape(card)[1]))
     
     upper_left_card = card[height_upper:height_lower, width_left:width_right, :]
+    upper_left_card = cv2.cvtColor(upper_left_card, cv2.COLOR_RGB2GRAY)
     
-    plt.imshow(upper_left_card)
+    upper_left_card = cv2.resize(upper_left_card, (28, 28), interpolation = cv2.INTER_AREA)
+    #ret, upper_left_card = cv2.threshold(upper_left_card, 127, 255, cv2.THRESH_BINARY)
+    blur = cv2.GaussianBlur(upper_left_card,(3,3),0)
+    ret3, upper_left_card = cv2.threshold(blur,127,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    upper_left_card = 255 - upper_left_card
+    
+    # TODO: try removing small clusters at edges
+    # TODO: repeat this processing with reference images, and find best match
+    
+    plt.imshow(upper_left_card, 'gray')
     plt.show()
     
-    #lower_white = (170, 160, 140)
-    lower_white = (100, 100, 100)
-    upper_white = (255, 255, 255)
+    print(classify_digit_keras(upper_left_card))
     
-    lower_green = (50, 200, 50)
-    upper_green = (200, 256, 200)
+    # lower_white = (170, 160, 140)
+    # #lower_white = (100, 100, 100)
+    # upper_white = (255, 255, 255)
     
-    lower_red = (250, 50, 50)
-    upper_red = (256, 70, 70)
+    # lower_green = (50, 200, 50)
+    # upper_green = (200, 256, 200)
     
-    mask_1 = cv2.inRange(upper_left_card, lower_white, upper_white)
-    mask_2 = cv2.inRange(upper_left_card, lower_green, upper_green)
-    mask_3 = cv2.inRange(upper_left_card, lower_red, upper_red)
+    # lower_red = (250, 50, 50)
+    # upper_red = (256, 70, 70)
     
-    mask = 255 - 255 * np.logical_or(mask_1, mask_2, mask_3)
+    # mask_1 = cv2.inRange(upper_left_card, lower_white, upper_white)
+    # mask_2 = cv2.inRange(upper_left_card, lower_green, upper_green)
+    # mask_3 = cv2.inRange(upper_left_card, lower_red, upper_red)
     
-    mask = np.stack((mask,)*3, axis=-1)
+    # mask = 255 - 255 * np.logical_or(mask_1, mask_2, mask_3)
     
-    plt.imshow(mask)
-    plt.show()
+    # mask = np.stack((mask,)*3, axis=-1)
+    
+    # plt.imshow(mask)
+    # plt.show()
     
     # TODO: Remove corner pieces of the mask
     
-    # Identify number of digits by scanning vertically left-to-right
-    digit_count = 0
-    hit = False
-    previous_hit = False
-    digit_starts = []
-    digit_ends = []
-    for i in range(np.shape(mask)[1]):
-        active_sum = np.sum(255 - mask[:, i, 0])
-        hit = (active_sum >= 5 * 255)
-        if hit and not previous_hit:
-            digit_count += 1
-            digit_starts.append(i)
-        if not hit and previous_hit:
-            digit_ends.append(i)
-        previous_hit = hit
-        #print(i, hit)
+    # # Identify number of digits by scanning vertically left-to-right
+    # digit_count = 0
+    # hit = False
+    # previous_hit = False
+    # digit_starts = []
+    # digit_ends = []
+    # for i in range(np.shape(mask)[1]):
+    #     active_sum = np.sum(255 - mask[:, i, 0])
+    #     hit = (active_sum >= 5 * 255)
+    #     if hit and not previous_hit:
+    #         digit_count += 1
+    #         digit_starts.append(i)
+    #     if not hit and previous_hit:
+    #         digit_ends.append(i)
+    #     previous_hit = hit
+    #     #print(i, hit)
     
-    # print(str(digit_count) + ' digit(s)')
-    # print(digit_starts, digit_ends)
+    # # print(str(digit_count) + ' digit(s)')
+    # # print(digit_starts, digit_ends)
     
-    for i in range(len(digit_starts)):
+    # for i in range(len(digit_starts)):
         
-        # Isolate appropriate digit as mask
-        # print(np.shape(mask), i, digit_starts[i], digit_ends[i])
-        mask2 = mask[:, digit_starts[i]:digit_ends[i], :]
+    #     # Isolate appropriate digit as mask
+    #     # print(np.shape(mask), i, digit_starts[i], digit_ends[i])
+    #     mask2 = mask#[:, digit_starts[i]:digit_ends[i], :]
     
-        # Resize, append with zeros
+    #     # Resize, append with zeros
     
-        # print(np.shape(mask2))
-    
-        plt.imshow(mask2)
-        plt.show()
+    #     # print(np.shape(mask2))
         
-        im = Image.fromarray(mask2)
-        current_hash = imagehash.phash(im)
+    #     mask2 = cv2.cvtColor(mask2, cv2.COLOR_RGB2GRAY)
         
-        max_distance = 10000000000
-        best_fit = 0
-        for digit in range(10):
-            distance = abs(digit_hashes[digit] - current_hash)
-            if distance < max_distance:
-                best_fit = digit
-                max_distance = distance
+    #     mask2 = cv2.resize(mask2, (28, 28), interpolation = cv2.INTER_AREA)
         
-        power += str(best_fit)
+    #     plt.imshow(mask2)
+    #     plt.show()
         
-    power = int(power)
-    print(power)
+    #     power += str(classify_digit_keras(mask2))
+        
+    #     # im = Image.fromarray(mask2)
+    #     # current_hash = imagehash.phash(im)
+        
+    #     # max_distance = 10000000000
+    #     # best_fit = 0
+    #     # for digit in range(10):
+    #     #     distance = abs(digit_hashes[digit] - current_hash)
+    #     #     if distance < max_distance:
+    #     #         best_fit = digit
+    #     #         max_distance = distance
+        
+    #     # power += str(best_fit)
+        
+    # power = int(power)
+    # print(power)
     
     # # isolate upper left of card
     # h_fraction = 0.21
@@ -999,11 +1020,11 @@ if __name__ == "__main__":
     ref_names = pickle.load(open('./classifier/names.p', 'rb'))
     ref_hashes = pickle.load(open('./classifier/hashes.p', 'rb'))
     
-    train_keras_digit_classifier()
+    #train_keras_digit_classifier()
     
     #digit_hashes = train_digit_classifier()
     
-    #identify_board()
+    identify_board()
     
     #action_hard_pass()
     
