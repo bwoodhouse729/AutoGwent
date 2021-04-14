@@ -388,7 +388,7 @@ def identify_board():
                         [[554, 460], [554, 573], [554, 684], [554, 797], [554, 908], [554, 1020], [554, 1132], [554, 1246]],
                         [[734, 441], [734, 559], [734, 678], [734, 797], [734, 915], [734, 1033], [734, 1152], [734, 1270]]]
     
-    for row in range(3, 4):#4):
+    for row in range(4):
         
         estimated_count = 0
         
@@ -470,24 +470,19 @@ def identify_card(card):
     
     card = cv2.resize(card, (249, 357), interpolation = cv2.INTER_AREA)
     
-    # plt.imshow(card)
-    # plt.show()
+    plt.imshow(card)
+    plt.show()
     #print(np.shape(card))
     
     name = classify_card_image(card)
-    print(name)
+    print('Name: ' + name)
     
     # TODO: Recognize the back of cards as well for traps
-    # Copy cardbacks from site
+    # TODO: Copy cardbacks from site
     
     # Identify card power
-    power = ''
     
-    # Isolate pixels that stand out in diamond
-    # Tried and failed with pytesseract
-    # Next attempt: Take reference images from folder
-    # 
-      
+    # Isolate pixels that stand out in diamond      
     # Mask white, red, or green number in upper left
     # White: (187, 178, 156)
     # Green: (118, 255, 121)
@@ -520,9 +515,9 @@ def identify_card(card):
     #upper_left_card = 255 - upper_left_card
     
     # remove corners
-    for i in range(15):
-        for j in range(15):
-            if i < 15 - j:
+    for i in range(18):
+        for j in range(18):
+            if i < 18 - j:
                 upper_left_card[i, j] = 0
                 upper_left_card[upper_left_card.shape[0] - i - 1, j] = 0
                 upper_left_card[i, upper_left_card.shape[1] - j - 1] = 0
@@ -530,177 +525,73 @@ def identify_card(card):
         
     # restrict to rows/columns with nonzero entries
     top = 0
-    while (np.sum(upper_left_card[top, :]) < 2 * 255):
+    while (np.sum(upper_left_card[top, :]) < 4 * 255):
         top += 1
         
     bottom = upper_left_card.shape[0] - 1
-    while (np.sum(upper_left_card[bottom, :]) < 2 * 255):
+    while (np.sum(upper_left_card[bottom, :]) < 4 * 255):
         bottom -= 1
     bottom += 1
     
     left = 0
-    while (np.sum(upper_left_card[:, left]) < 2 * 255):
+    while (np.sum(upper_left_card[:, left]) < 4 * 255):
         left += 1
         
     right = upper_left_card.shape[1] - 1
-    while (np.sum(upper_left_card[:, right]) < 2 * 255):
+    while (np.sum(upper_left_card[:, right]) < 4 * 255):
         right -= 1
     right += 1
     
     upper_left_card = upper_left_card[top:bottom, left:right]
     
-    upper_left_card = cv2.resize(upper_left_card, (50, 50), interpolation = cv2.INTER_AREA)
-    
-    plt.imshow(upper_left_card, 'gray')
-    plt.show()
-    
-    min_mse = 100000000000
-    for i in range(len(ref_digits)):
-        digit = ref_digits[i]
-        mse = np.sum((upper_left_card.astype("float") - digit.astype("float")) ** 2)
-        if mse < min_mse:
-            min_mse = mse
-            best_digit = i
-    print(best_digit)
-    
-    # text = pytesseract.image_to_string(upper_left_card, config='digits -psm 10')
-    # print('OCR: ' + text.rstrip())
-    
-    #print(classify_digit_keras(upper_left_card))
-    
-    # lower_white = (170, 160, 140)
-    # #lower_white = (100, 100, 100)
-    # upper_white = (255, 255, 255)
-    
-    # lower_green = (50, 200, 50)
-    # upper_green = (200, 256, 200)
-    
-    # lower_red = (250, 50, 50)
-    # upper_red = (256, 70, 70)
-    
-    # mask_1 = cv2.inRange(upper_left_card, lower_white, upper_white)
-    # mask_2 = cv2.inRange(upper_left_card, lower_green, upper_green)
-    # mask_3 = cv2.inRange(upper_left_card, lower_red, upper_red)
-    
-    # mask = 255 - 255 * np.logical_or(mask_1, mask_2, mask_3)
-    
-    # mask = np.stack((mask,)*3, axis=-1)
-    
-    # plt.imshow(mask)
+    # plt.imshow(upper_left_card, 'gray')
     # plt.show()
     
-    # TODO: Remove corner pieces of the mask
+    # Identify number of digits by scanning vertically left-to-right
+    digit_count = 0
+    hit = False
+    previous_hit = False
+    digit_starts = []
+    digit_ends = []
+    for i in range(np.shape(upper_left_card)[1]):
+        active_sum = np.sum(upper_left_card[:, i])
+        hit = (active_sum >= 3 * 255)
+        if hit and not previous_hit:
+            digit_count += 1
+            digit_starts.append(i)
+        if not hit and previous_hit:
+            digit_ends.append(i)
+        previous_hit = hit
+        #print(i, hit)
+    digit_ends.append(upper_left_card.shape[1])
     
-    # # Identify number of digits by scanning vertically left-to-right
-    # digit_count = 0
-    # hit = False
-    # previous_hit = False
-    # digit_starts = []
-    # digit_ends = []
-    # for i in range(np.shape(mask)[1]):
-    #     active_sum = np.sum(255 - mask[:, i, 0])
-    #     hit = (active_sum >= 5 * 255)
-    #     if hit and not previous_hit:
-    #         digit_count += 1
-    #         digit_starts.append(i)
-    #     if not hit and previous_hit:
-    #         digit_ends.append(i)
-    #     previous_hit = hit
-    #     #print(i, hit)
+    # print(str(digit_count) + ' digit(s)')
+    # print(digit_starts, digit_ends)
     
-    # # print(str(digit_count) + ' digit(s)')
-    # # print(digit_starts, digit_ends)
+    digit_string = ''
     
-    # for i in range(len(digit_starts)):
+    for i in range(len(digit_starts)):
+    
+        upper_left_card_2 = upper_left_card[:, digit_starts[i]:digit_ends[i]]
         
-    #     # Isolate appropriate digit as mask
-    #     # print(np.shape(mask), i, digit_starts[i], digit_ends[i])
-    #     mask2 = mask#[:, digit_starts[i]:digit_ends[i], :]
-    
-    #     # Resize, append with zeros
-    
-    #     # print(np.shape(mask2))
+        upper_left_card_2 = cv2.resize(upper_left_card_2, (50, 50), interpolation = cv2.INTER_AREA)
         
-    #     mask2 = cv2.cvtColor(mask2, cv2.COLOR_RGB2GRAY)
+        min_mse = 100000000000
+        for i in range(len(ref_digits)):
+            digit = ref_digits[i]
+            mse = np.sum((upper_left_card_2.astype("float") - digit.astype("float")) ** 2)
+            if mse < min_mse:
+                min_mse = mse
+                best_digit = i
+        digit_string += str(best_digit)
         
-    #     mask2 = cv2.resize(mask2, (28, 28), interpolation = cv2.INTER_AREA)
-        
-    #     plt.imshow(mask2)
-    #     plt.show()
-        
-    #     power += str(classify_digit_keras(mask2))
-        
-    #     # im = Image.fromarray(mask2)
-    #     # current_hash = imagehash.phash(im)
-        
-    #     # max_distance = 10000000000
-    #     # best_fit = 0
-    #     # for digit in range(10):
-    #     #     distance = abs(digit_hashes[digit] - current_hash)
-    #     #     if distance < max_distance:
-    #     #         best_fit = digit
-    #     #         max_distance = distance
-        
-    #     # power += str(best_fit)
-        
-    # power = int(power)
-    # print(power)
-    
-    # # isolate upper left of card
-    # h_fraction = 0.21
-    # v_fraction_upper = 0.06
-    # v_fraction_lower = 0.27
-    # #v_fraction = # 0.31
-    
-    # width = int(round(h_fraction * np.shape(card)[0]))
-    # #height = int(round(v_fraction * np.shape(card)[1]))
-    # height_upper = int(round(v_fraction_upper * np.shape(card)[1]))
-    # height_lower = int(round(v_fraction_lower * np.shape(card)[1]))
-    
-    # upper_left_card = card[height_upper:height_lower, 0:width, :]
-    
-    # plt.imshow(upper_left_card)
-    # plt.show()
-    
-    # lower_white = (170, 160, 140)
-    # upper_white = (210, 200, 170)
-    
-    # lower_green = (50, 200, 50)
-    # upper_green = (200, 256, 200)
-    
-    # lower_red = (250, 50, 50)
-    # upper_red = (256, 70, 70)
-    
-    # mask_1 = cv2.inRange(upper_left_card, lower_white, upper_white)
-    # mask_2 = cv2.inRange(upper_left_card, lower_green, upper_green)
-    # mask_3 = cv2.inRange(upper_left_card, lower_red, upper_red)
-    
-    # mask = np.logical_or(mask_1, mask_2, mask_3)
-    
-    # plt.imshow(1 - mask, cmap='gray')
-    # plt.show()
-    
-    # Create custom kernel
-    # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
-    # # Perform closing (dilation followed by erosion)
-    # mask = 255 - 255 * cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-    # #mask = cv2.blur(mask, (2, 2))
-    
-    # mask = np.stack((mask,)*3, axis=-1)
-    
-    # #print(mask)
-    
-    # cv2.dilate(mask, (5, 5), mask)
-    
-    # # mask = cv2.resize(mask, (20, 10), interpolation = cv2.INTER_AREA)
-    
-    # plt.imshow(mask)
-    # plt.show()
-    
-    # text = pytesseract.image_to_string(mask, config='digits -psm 7')
-    # print('OCR: ' + text.rstrip())
+    power = int(digit_string)
+    print('Power: ' + str(power))
     
     # TODO: Identify card armor
+    # First check if card has any armor via shield icon
+    
+    
     # TODO: Identify card statuses
     # TODO: Identify presence of card order ability
     # TODO: Identify order ability status (gray, red, or green) if present
@@ -996,8 +887,8 @@ def train_digit_classifier():
         
         upper_left_card = cv2.resize(upper_left_card, (50, 50), interpolation = cv2.INTER_AREA)
         
-        plt.imshow(upper_left_card, cmap='gray')
-        plt.show()
+        # plt.imshow(upper_left_card, cmap='gray')
+        # plt.show()
         
         ref_digits.append(upper_left_card)
         
@@ -1159,8 +1050,8 @@ if __name__ == "__main__":
     #digit_hashes = train_digit_classifier()
     
     train_digit_classifier()
-    identify_mulligan_choices()
-    #identify_board()
+    #identify_mulligan_choices()
+    identify_board()
     
     #action_hard_pass()
     
