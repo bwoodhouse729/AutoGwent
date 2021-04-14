@@ -346,13 +346,15 @@ def identify_board():
     # TODO: Could restrict to units and artifacts for classification here
     
     #image = cv2.imread('./development_screenshots/sample_board_9_cards.png')
-    image = cv2.imread('./development_screenshots/sample_board_8_cards.png')
+    #image = cv2.imread('./development_screenshots/sample_board_8_cards.png')
+    image = cv2.imread('./development_screenshots/sample_armor.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     diamond_heights = [134, 267, 422, 589]
     left_starts = [363, 345, 335, 294]
+    #left_starts = [363, 345, 380, 294] # 3rd row annoying for current board
     card_starts = [363, 345, 315, 294]
-    widths = [95, 102, 108, 113]
+    widths = [97, 101, 107, 114]
     
     # coordinates of cards, by row
     upper_lefts_odd = [[[121, 367], [121, 463], [121, 560], [121, 658], [121, 754], [121, 851], [121, 948], [121, 1045], [121, 1142]],
@@ -390,23 +392,38 @@ def identify_board():
     
     for row in range(4):
         
-        estimated_count = 0
-        
         hsv_image = cv2.cvtColor(image[diamond_heights[row] - 15:diamond_heights[row] + 15, left_starts[row]:left_starts[row] + 500], cv2.COLOR_RGB2HSV)
-        lower = np.array([12, 50, 50])
-        upper = np.array([30, 150, 150])
-        mask = cv2.inRange(hsv_image, lower, upper)
+        lower1 = np.array([12, 50, 50])
+        #upper1 = np.array([30, 150, 150])
+        upper1 = np.array([30, 200, 200])
+        
+        # lower2 = np.array([0, 50, 50])
+        # upper2 = np.array([2, 150, 150])
+        
+        mask = cv2.inRange(hsv_image, lower1, upper1)
+        # mask1 = cv2.inRange(hsv_image, lower1, upper1)
+        # mask2 = cv2.inRange(hsv_image, lower2, upper2)
+        # mask = np.logical_or(mask1, mask2)
         # plt.figure(figsize=(20, 20))
         # plt.imshow(mask)
         # plt.show()
         
-        for i in range(0, np.shape(hsv_image)[1]):
+        estimated_count = 0
+        
+        i = 0
+        while (i < np.shape(hsv_image)[1]):
             active_sum = sum(mask[:, i])
-            if active_sum > 5 * 255:
+            if (row == 2 and i < 50): # 3rd row annoying
+                i += 1
+            elif active_sum > 5 * 255:
+                estimated_count += 1
+                i += widths[row]
                 #print(i)
-                estimated_count = int(round(9 - 2 * i / widths[row]))
+                #estimated_count = int(round(9 - 2 * i / widths[row]))
                 #print(estimated_count)
-                break
+            else:
+                i += 1
+        #print('Estimated Card Count: ' + str(estimated_count))
         
         # Recover all cards based on estimated count, then identify them
         if estimated_count % 2 == 0 and estimated_count > 0:
@@ -515,9 +532,10 @@ def identify_card(card):
     #upper_left_card = 255 - upper_left_card
     
     # remove corners
-    for i in range(18):
-        for j in range(18):
-            if i < 18 - j:
+    jump_in = 25
+    for i in range(jump_in):
+        for j in range(jump_in):
+            if i < jump_in - j:
                 upper_left_card[i, j] = 0
                 upper_left_card[upper_left_card.shape[0] - i - 1, j] = 0
                 upper_left_card[i, upper_left_card.shape[1] - j - 1] = 0
@@ -1034,7 +1052,7 @@ if __name__ == "__main__":
     time.sleep(3)
     
     # uncomment to take screenshot for development
-    # take_screenshot()
+    #take_screenshot()
     
     # uncomment to create image hash references based on image library of cards
     # names, hashes = train_card_classifier()
@@ -1047,10 +1065,11 @@ if __name__ == "__main__":
     
     #train_keras_digit_classifier()
     
-    #digit_hashes = train_digit_classifier()
+    digit_hashes = train_digit_classifier()
     
-    train_digit_classifier()
+    #train_digit_classifier()
     #identify_mulligan_choices()
+    
     identify_board()
     
     #action_hard_pass()
