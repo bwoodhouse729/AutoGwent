@@ -589,8 +589,8 @@ def identify_card(card):
     print('Power: ' + str(power))
     
     # TODO: Identify card armor
-    # First check if card has any armor via shield icon
-    
+    # TODO: First check if card has any armor via shield icon
+    # TODO: Need some development images where cards have armor
     
     # TODO: Identify card statuses
     # TODO: Identify presence of card order ability
