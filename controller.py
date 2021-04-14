@@ -345,15 +345,16 @@ def identify_board():
     
     # TODO: Could restrict to units and artifacts for classification here
     
-    #image = cv2.imread('./development_screenshots/sample_board_9_cards.png')
+    image = cv2.imread('./development_screenshots/sample_board_9_cards.png')
     #image = cv2.imread('./development_screenshots/sample_board_8_cards.png')
-    image = cv2.imread('./development_screenshots/sample_armor.png')
+    #image = cv2.imread('./development_screenshots/sample_armor.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     diamond_heights = [134, 267, 422, 589]
     left_starts = [363, 345, 335, 294]
     #left_starts = [363, 345, 380, 294] # 3rd row annoying for current board
     card_starts = [363, 345, 315, 294]
+    row_widths = [867, 909, 959, 1012]
     widths = [97, 101, 107, 114]
     
     # coordinates of cards, by row
@@ -392,7 +393,7 @@ def identify_board():
     
     for row in range(4):
         
-        hsv_image = cv2.cvtColor(image[diamond_heights[row] - 15:diamond_heights[row] + 15, left_starts[row]:left_starts[row] + 500], cv2.COLOR_RGB2HSV)
+        hsv_image = cv2.cvtColor(image[diamond_heights[row] - 15:diamond_heights[row] + 15, left_starts[row]:left_starts[row] + row_widths[row]], cv2.COLOR_RGB2HSV)
         lower1 = np.array([12, 50, 50])
         #upper1 = np.array([30, 150, 150])
         upper1 = np.array([30, 200, 200])
@@ -423,7 +424,7 @@ def identify_board():
                 #print(estimated_count)
             else:
                 i += 1
-        #print('Estimated Card Count: ' + str(estimated_count))
+        print('Estimated Card Count: ' + str(estimated_count))
         
         # Recover all cards based on estimated count, then identify them
         if estimated_count % 2 == 0 and estimated_count > 0:
@@ -522,95 +523,58 @@ def identify_card(card):
     upper_left_card = card[height_upper:height_lower, width_left:width_right, :]
     upper_left_card = cv2.cvtColor(upper_left_card, cv2.COLOR_RGB2GRAY)
     
+    upper_left_card = cv2.GaussianBlur(upper_left_card,(5,5),0)
+    ret3, upper_left_card = cv2.threshold(upper_left_card,127,255,cv2.THRESH_BINARY)#+cv2.THRESH_OTSU
+    #upper_left_card = 255 - upper_left_card
+    
     # plt.imshow(upper_left_card)
     # plt.show()
     
     #upper_left_card = cv2.resize(upper_left_card, (int(round(ref_digits[0].shape[1])), int(round(ref_digits[0].shape[0]))), interpolation = cv2.INTER_AREA)
     #ret, upper_left_card = cv2.threshold(upper_left_card, 127, 255, cv2.THRESH_BINARY)
-    blur = cv2.GaussianBlur(upper_left_card,(5,5),0)
-    ret3, upper_left_card = cv2.threshold(blur,127,255,cv2.THRESH_BINARY)#+cv2.THRESH_OTSU
-    #upper_left_card = 255 - upper_left_card
-    
-    # remove corners
-    jump_in = 25
-    for i in range(jump_in):
-        for j in range(jump_in):
-            if i < jump_in - j:
-                upper_left_card[i, j] = 0
-                upper_left_card[upper_left_card.shape[0] - i - 1, j] = 0
-                upper_left_card[i, upper_left_card.shape[1] - j - 1] = 0
-                upper_left_card[upper_left_card.shape[0] - i - 1, upper_left_card.shape[1] - j - 1] = 0
-        
-    # restrict to rows/columns with nonzero entries
-    top = 0
-    while (np.sum(upper_left_card[top, :]) < 4 * 255):
-        top += 1
-        
-    bottom = upper_left_card.shape[0] - 1
-    while (np.sum(upper_left_card[bottom, :]) < 4 * 255):
-        bottom -= 1
-    bottom += 1
-    
-    left = 0
-    while (np.sum(upper_left_card[:, left]) < 4 * 255):
-        left += 1
-        
-    right = upper_left_card.shape[1] - 1
-    while (np.sum(upper_left_card[:, right]) < 4 * 255):
-        right -= 1
-    right += 1
-    
-    upper_left_card = upper_left_card[top:bottom, left:right]
-    
-    # plt.imshow(upper_left_card, 'gray')
-    # plt.show()
-    
-    # Identify number of digits by scanning vertically left-to-right
-    digit_count = 0
-    hit = False
-    previous_hit = False
-    digit_starts = []
-    digit_ends = []
-    for i in range(np.shape(upper_left_card)[1]):
-        active_sum = np.sum(upper_left_card[:, i])
-        hit = (active_sum >= 3 * 255)
-        if hit and not previous_hit:
-            digit_count += 1
-            digit_starts.append(i)
-        if not hit and previous_hit:
-            digit_ends.append(i)
-        previous_hit = hit
-        #print(i, hit)
-    digit_ends.append(upper_left_card.shape[1])
-    
-    # print(str(digit_count) + ' digit(s)')
-    # print(digit_starts, digit_ends)
-    
-    digit_string = ''
-    
-    for i in range(len(digit_starts)):
-    
-        upper_left_card_2 = upper_left_card[:, digit_starts[i]:digit_ends[i]]
-        
-        upper_left_card_2 = cv2.resize(upper_left_card_2, (50, 50), interpolation = cv2.INTER_AREA)
-        
-        min_mse = 100000000000
-        for i in range(len(ref_digits)):
-            digit = ref_digits[i]
-            mse = np.sum((upper_left_card_2.astype("float") - digit.astype("float")) ** 2)
-            if mse < min_mse:
-                min_mse = mse
-                best_digit = i
-        digit_string += str(best_digit)
-        
-    power = int(digit_string)
+    power = identify_number(upper_left_card)
     print('Power: ' + str(power))
     
     # TODO: Identify card armor
-    # TODO: First check if card has any armor via shield icon
-    # TODO: Need some development images where cards have armor
+    # First check if card has any armor via shield icon
+    # Isolate upper right of card image
+    # Count and threshold number of yellow-ish pixels
+    armor_present = False
+    
+    h_fraction_left = 0.25
+    h_fraction_right = 0.05
+    v_fraction_lower = 0.17
+    v_fraction_upper = 0.05
+    
+    armor_image = card[int(round(v_fraction_upper * card.shape[0])):int(round(v_fraction_lower * card.shape[0])), -int(round(h_fraction_left * card.shape[1])):-int(round(h_fraction_right * card.shape[1]))]
+    # plt.imshow(armor_image)
+    # plt.show()
+    
+    armor_hsv = cv2.cvtColor(armor_image, cv2.COLOR_RGB2HSV)
+    lower_bound = np.array([20, 30, 100])
+    upper_bound = np.array([30, 50, 256])
+    
+    # plt.hist(armor_hsv[:,:,0])
+    # plt.show()
+    
+    mask = cv2.inRange(armor_hsv, lower_bound, upper_bound)
+    
+    # plt.imshow(mask)
+    # plt.show()
+    
+    armor_image = cv2.cvtColor(armor_image, cv2.COLOR_RGB2GRAY)
+    if np.sum(mask) > 100:
+        armor_present = True
+    #print(armor_present)
+    if armor_present:
+        #np.set_printoptions(threshold=np.inf)
+        #print(armor_image)
+        armor = identify_number(mask)
+        print('Armor: ' + str(armor))
     
     # TODO: Identify card statuses
+    
+    
     # TODO: Identify presence of card order ability
     # TODO: Identify order ability status (gray, red, or green) if present
     # TODO: Identify number of order charges if present
@@ -636,6 +600,83 @@ def identify_enemy_leader_ability():
 def identify_enemy_passed():
     # identify if the enemy has passed
     pass
+
+def identify_number(image):
+    # remove corners
+    jump_in = 25
+    for i in range(jump_in):
+        for j in range(jump_in):
+            if i < jump_in - j:
+                image[i, j] = 0
+                image[image.shape[0] - i - 1, j] = 0
+                image[i, image.shape[1] - j - 1] = 0
+                image[image.shape[0] - i - 1, image.shape[1] - j - 1] = 0
+        
+    # restrict to rows/columns with nonzero entries
+    top = 0
+    while (np.sum(image[top, :]) < 4 * 255):
+        top += 1
+        
+    bottom = image.shape[0] - 1
+    while (np.sum(image[bottom, :]) < 4 * 255):
+        bottom -= 1
+    bottom += 1
+    
+    left = 0
+    while (np.sum(image[:, left]) < 4 * 255):
+        left += 1
+        
+    right = image.shape[1] - 1
+    while (np.sum(image[:, right]) < 4 * 255):
+        right -= 1
+    right += 1
+    
+    image = image[top:bottom, left:right]
+    
+    # plt.imshow(image, 'gray')
+    # plt.show()
+    
+    # Identify number of digits by scanning vertically left-to-right
+    digit_count = 0
+    hit = False
+    previous_hit = False
+    digit_starts = []
+    digit_ends = []
+    for i in range(np.shape(image)[1]):
+        active_sum = np.sum(image[:, i])
+        hit = (active_sum >= 3 * 255)
+        if hit and not previous_hit:
+            digit_count += 1
+            digit_starts.append(i)
+        if not hit and previous_hit:
+            digit_ends.append(i)
+        previous_hit = hit
+        #print(i, hit)
+    digit_ends.append(image.shape[1])
+    
+    # print(str(digit_count) + ' digit(s)')
+    # print(digit_starts, digit_ends)
+    
+    digit_string = ''
+    
+    for i in range(len(digit_starts)):
+    
+        image_2 = image[:, digit_starts[i]:digit_ends[i]]
+        
+        image_2 = cv2.resize(image_2, (50, 50), interpolation = cv2.INTER_AREA)
+        
+        min_mse = 100000000000
+        for i in range(len(ref_digits)):
+            digit = ref_digits[i]
+            mse = np.sum((image_2.astype("float") - digit.astype("float")) ** 2)
+            if mse < min_mse:
+                min_mse = mse
+                best_digit = i
+        digit_string += str(best_digit)
+        
+    power = int(digit_string)
+    
+    return power
 
 def identify_number_of_enemy_cards():
     # identify the number of cards in the enemy's hand
