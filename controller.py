@@ -22,6 +22,8 @@ TODO: Fill out skeleton by developing routines to recognize various aspects of t
 TODO: Long-term, connect with C++ game simulator and AI engine to make choices
       This script will execute the choices made.
 TODO: Log each game in an easy-to-process manner.
+
+TODO: Recognize symbols in upper left of card.
 """
 
 import cv2
@@ -108,6 +110,7 @@ class Card:
 ref_names = []
 ref_hashes = []
 digit_hashes = []
+ref_digits = []
 
 mulligan_names = []
 mulligan_centers = []
@@ -309,6 +312,9 @@ def classify_card_image(card):
     return best_match
 
 def classify_digit_keras(image):
+    
+    image = cv2.resize(image, (28, 28), interpolation = cv2.INTER_AREA)
+    
     model = load_model("./classifier/keras_model.h5")
 
     img_rows = 28
@@ -382,7 +388,7 @@ def identify_board():
                         [[554, 460], [554, 573], [554, 684], [554, 797], [554, 908], [554, 1020], [554, 1132], [554, 1246]],
                         [[734, 441], [734, 559], [734, 678], [734, 797], [734, 915], [734, 1033], [734, 1152], [734, 1270]]]
     
-    for row in range(4):
+    for row in range(3, 4):#4):
         
         estimated_count = 0
         
@@ -417,11 +423,13 @@ def identify_board():
                            (upper_rights_even[row][start + i][1], upper_rights_even[row][start + i][0]),
                            (lower_rights_even[row][start + i][1], lower_rights_even[row][start + i][0]),
                            (lower_lefts_even[row][start + i][1], lower_lefts_even[row][start + i][0])]
-                target = [(0, 0), (100, 0), (100, 150), (0, 150)]
+                width = np.shape(card)[1]
+                height = np.shape(card)[0]
+                target = [(0, 0), (width, 0), (width, height), (0, height)]
                 H, _ = cv2.findHomography(np.array(corners), np.array(target))
                 
                 # Apply matrix H to source image.
-                card = cv2.warpPerspective(image, H, (100, 150))
+                card = cv2.warpPerspective(image, H, (width, height))
                 
                 # print('Reshaped')
                 # plt.imshow(card)
@@ -444,11 +452,13 @@ def identify_board():
                            (upper_rights_odd[row][start + i][1], upper_rights_odd[row][start + i][0]),
                            (lower_rights_odd[row][start + i][1], lower_rights_odd[row][start + i][0]),
                            (lower_lefts_odd[row][start + i][1], lower_lefts_odd[row][start + i][0])]
-                target = [(0, 0), (100, 0), (100, 150), (0, 150)]
+                width = np.shape(card)[1]
+                height = np.shape(card)[0]
+                target = [(0, 0), (width, 0), (width, height), (0, height)]
                 H, _ = cv2.findHomography(np.array(corners), np.array(target))
                 
                 # Apply matrix H to source image.
-                card = cv2.warpPerspective(image, H, (100, 150))
+                card = cv2.warpPerspective(image, H, (width, height))
                 
                 # print('Reshaped')
                 # plt.imshow(card)
@@ -458,8 +468,11 @@ def identify_board():
 
 def identify_card(card):
     
-    plt.imshow(card)
-    plt.show()
+    card = cv2.resize(card, (249, 357), interpolation = cv2.INTER_AREA)
+    
+    # plt.imshow(card)
+    # plt.show()
+    #print(np.shape(card))
     
     name = classify_card_image(card)
     print(name)
@@ -483,33 +496,77 @@ def identify_card(card):
       
     # isolate upper left of card
     h_fraction_left = 0.05
-    h_fraction_right = 0.17
+    h_fraction_right = 0.28
     v_fraction_upper = 0.04
-    v_fraction_lower = 0.26
+    v_fraction_lower = 0.18
     #v_fraction = # 0.31
     
-    width_left = int(round(h_fraction_left * np.shape(card)[0]))
-    width_right = int(round(h_fraction_right * np.shape(card)[0]))
+    width_left = int(round(h_fraction_left * np.shape(card)[1]))
+    width_right = int(round(h_fraction_right * np.shape(card)[1]))
     #height = int(round(v_fraction * np.shape(card)[1]))
-    height_upper = int(round(v_fraction_upper * np.shape(card)[1]))
-    height_lower = int(round(v_fraction_lower * np.shape(card)[1]))
+    height_upper = int(round(v_fraction_upper * np.shape(card)[0]))
+    height_lower = int(round(v_fraction_lower * np.shape(card)[0]))
     
     upper_left_card = card[height_upper:height_lower, width_left:width_right, :]
     upper_left_card = cv2.cvtColor(upper_left_card, cv2.COLOR_RGB2GRAY)
     
-    upper_left_card = cv2.resize(upper_left_card, (28, 28), interpolation = cv2.INTER_AREA)
-    #ret, upper_left_card = cv2.threshold(upper_left_card, 127, 255, cv2.THRESH_BINARY)
-    blur = cv2.GaussianBlur(upper_left_card,(3,3),0)
-    ret3, upper_left_card = cv2.threshold(blur,127,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    upper_left_card = 255 - upper_left_card
+    # plt.imshow(upper_left_card)
+    # plt.show()
     
-    # TODO: try removing small clusters at edges
-    # TODO: repeat this processing with reference images, and find best match
+    #upper_left_card = cv2.resize(upper_left_card, (int(round(ref_digits[0].shape[1])), int(round(ref_digits[0].shape[0]))), interpolation = cv2.INTER_AREA)
+    #ret, upper_left_card = cv2.threshold(upper_left_card, 127, 255, cv2.THRESH_BINARY)
+    blur = cv2.GaussianBlur(upper_left_card,(5,5),0)
+    ret3, upper_left_card = cv2.threshold(blur,127,255,cv2.THRESH_BINARY)#+cv2.THRESH_OTSU
+    #upper_left_card = 255 - upper_left_card
+    
+    # remove corners
+    for i in range(15):
+        for j in range(15):
+            if i < 15 - j:
+                upper_left_card[i, j] = 0
+                upper_left_card[upper_left_card.shape[0] - i - 1, j] = 0
+                upper_left_card[i, upper_left_card.shape[1] - j - 1] = 0
+                upper_left_card[upper_left_card.shape[0] - i - 1, upper_left_card.shape[1] - j - 1] = 0
+        
+    # restrict to rows/columns with nonzero entries
+    top = 0
+    while (np.sum(upper_left_card[top, :]) < 2 * 255):
+        top += 1
+        
+    bottom = upper_left_card.shape[0] - 1
+    while (np.sum(upper_left_card[bottom, :]) < 2 * 255):
+        bottom -= 1
+    bottom += 1
+    
+    left = 0
+    while (np.sum(upper_left_card[:, left]) < 2 * 255):
+        left += 1
+        
+    right = upper_left_card.shape[1] - 1
+    while (np.sum(upper_left_card[:, right]) < 2 * 255):
+        right -= 1
+    right += 1
+    
+    upper_left_card = upper_left_card[top:bottom, left:right]
+    
+    upper_left_card = cv2.resize(upper_left_card, (50, 50), interpolation = cv2.INTER_AREA)
     
     plt.imshow(upper_left_card, 'gray')
     plt.show()
     
-    print(classify_digit_keras(upper_left_card))
+    min_mse = 100000000000
+    for i in range(len(ref_digits)):
+        digit = ref_digits[i]
+        mse = np.sum((upper_left_card.astype("float") - digit.astype("float")) ** 2)
+        if mse < min_mse:
+            min_mse = mse
+            best_digit = i
+    print(best_digit)
+    
+    # text = pytesseract.image_to_string(upper_left_card, config='digits -psm 10')
+    # print('OCR: ' + text.rstrip())
+    
+    #print(classify_digit_keras(upper_left_card))
     
     # lower_white = (170, 160, 140)
     # #lower_white = (100, 100, 100)
@@ -682,7 +739,7 @@ def identify_opponent_card():
     # if not, return ''
     pass
 
-def identify_mulligan_choices(width, height, names, hashes):
+def identify_mulligan_choices():
     # identify and click cards for mulligan
     
     # Load test image
@@ -749,25 +806,28 @@ def identify_mulligan_choices(width, height, names, hashes):
         # plt.show()
         # print(np.shape(card))
         
-        fraction_x = 0.2
-        fraction_y = 0.25
-        image = card[int(card.shape[0] * fraction_x):-int(card.shape[0] * fraction_x), int(card.shape[1] * fraction_y):-int(card.shape[1] * fraction_y)]
+        name = identify_card(card)
+        names.append(name)
         
-        # resize image
-        #image = cv2.resize(image, (width, height), interpolation = cv2.INTER_AREA)
+        # fraction_x = 0.2
+        # fraction_y = 0.25
+        # image = card[int(card.shape[0] * fraction_x):-int(card.shape[0] * fraction_x), int(card.shape[1] * fraction_y):-int(card.shape[1] * fraction_y)]
         
-        im = Image.fromarray(image)
-        active_hash = imagehash.phash(im)
+        # # resize image
+        # #image = cv2.resize(image, (width, height), interpolation = cv2.INTER_AREA)
         
-        min_distance = 1000000000
-        best_match = ''
-        for i in range(len(hashes)):
-            current_hash = hashes[i]
-            distance = abs(active_hash - current_hash)
-            if distance < min_distance:
-                min_distance = distance
-                best_match = names[i]
-        names.append(best_match)
+        # im = Image.fromarray(image)
+        # active_hash = imagehash.phash(im)
+        
+        # min_distance = 1000000000
+        # best_match = ''
+        # for i in range(len(hashes)):
+        #     current_hash = hashes[i]
+        #     distance = abs(active_hash - current_hash)
+        #     if distance < min_distance:
+        #         min_distance = distance
+        #         best_match = names[i]
+        # names.append(best_match)
     
     return names, centers
 
@@ -874,50 +934,123 @@ def train_digit_classifier():
         image = cv2.imread(file)
         card = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
-        # isolate upper left of card
-        h_fraction_left = 0.08
-        h_fraction_right = 0.15
-        if digit == 10:
-            h_fraction_left = 0.10
-            h_fraction_right = 0.17
-        v_fraction_upper = 0.09
-        v_fraction_lower = 0.27
+        # isolate upper left of card (slightly to the lower right of in-game cards)
+        h_fraction_left = 0.07
+        h_fraction_right = 0.27
+        v_fraction_upper = 0.05
+        v_fraction_lower = 0.19
         #v_fraction = # 0.31
+        if digit == 10:
+            h_fraction_left = 0.15
+            h_fraction_right = 0.28
         
-        width_left = int(round(h_fraction_left * np.shape(card)[0]))
-        width_right = int(round(h_fraction_right * np.shape(card)[0]))
+        width_left = int(round(h_fraction_left * np.shape(card)[1]))
+        width_right = int(round(h_fraction_right * np.shape(card)[1]))
         #height = int(round(v_fraction * np.shape(card)[1]))
-        height_upper = int(round(v_fraction_upper * np.shape(card)[1]))
-        height_lower = int(round(v_fraction_lower * np.shape(card)[1]))
+        height_upper = int(round(v_fraction_upper * np.shape(card)[0]))
+        height_lower = int(round(v_fraction_lower * np.shape(card)[0]))
         
         upper_left_card = card[height_upper:height_lower, width_left:width_right, :]
+        upper_left_card = cv2.cvtColor(upper_left_card, cv2.COLOR_RGB2GRAY)
         
         # plt.imshow(upper_left_card)
         # plt.show()
         
-        lower_white = (170, 160, 140)
-        upper_white = (255, 255, 255)
+        #upper_left_card = cv2.resize(upper_left_card, (int(round(ref_digits[0].shape[1])), int(round(ref_digits[0].shape[0]))), interpolation = cv2.INTER_AREA)
+        #ret, upper_left_card = cv2.threshold(upper_left_card, 127, 255, cv2.THRESH_BINARY)
+        blur = cv2.GaussianBlur(upper_left_card,(5,5),0)
+        ret3, upper_left_card = cv2.threshold(blur,127,255,cv2.THRESH_BINARY)#+cv2.THRESH_OTSU
+        upper_left_card = upper_left_card
         
-        # lower_green = (50, 200, 50)
-        # upper_green = (200, 256, 200)
+        # remove corners
+        for i in range(18):
+            for j in range(18):
+                if i < 18 - j:
+                    if digit != 10:
+                        upper_left_card[i, j] = 0
+                    if digit != 10:
+                        upper_left_card[upper_left_card.shape[0] - i - 1, j] = 0
+                    upper_left_card[i, upper_left_card.shape[1] - j - 1] = 0
+                    upper_left_card[upper_left_card.shape[0] - i - 1, upper_left_card.shape[1] - j - 1] = 0  
         
-        # lower_red = (250, 50, 50)
-        # upper_red = (256, 70, 70)
+        # restrict to rows/columns with nonzero entries
+        top = 0
+        while (np.sum(upper_left_card[top, :]) < 2 * 255):
+            top += 1
+            
+        bottom = upper_left_card.shape[0] - 1
+        while (np.sum(upper_left_card[bottom, :]) < 2 * 255):
+            bottom -= 1
+        bottom += 1
         
-        mask = cv2.inRange(upper_left_card, lower_white, upper_white)
+        left = 0
+        while (np.sum(upper_left_card[:, left]) < 2 * 255):
+            left += 1
+            
+        right = upper_left_card.shape[1] - 1
+        while (np.sum(upper_left_card[:, right]) < 2 * 255):
+            right -= 1
+        right += 1
         
-        mask = 255 - mask
+        upper_left_card = upper_left_card[top:bottom, left:right]
         
-        mask = np.stack((mask,)*3, axis=-1)
+        upper_left_card = cv2.resize(upper_left_card, (50, 50), interpolation = cv2.INTER_AREA)
         
-        plt.imshow(mask)
+        plt.imshow(upper_left_card, cmap='gray')
         plt.show()
         
-        im = Image.fromarray(mask)
-        active_hash = imagehash.phash(im)
-        hashes.append(active_hash)
+        ref_digits.append(upper_left_card)
         
-    return hashes
+        # # isolate upper left of card
+        # h_fraction_left = 0.08
+        # h_fraction_right = 0.15
+        # v_fraction_upper = 0.09
+        # v_fraction_lower = 0.27
+        
+        # # h_fraction_left = 0.05
+        # # h_fraction_right = 0.17
+        # # v_fraction_upper = 0.04
+        # # v_fraction_lower = 0.26
+        
+        # if digit == 10:
+        #     h_fraction_left = 0.10
+        #     h_fraction_right = 0.17
+        
+        # width_left = int(round(h_fraction_left * np.shape(card)[0]))
+        # width_right = int(round(h_fraction_right * np.shape(card)[0]))
+        # height_upper = int(round(v_fraction_upper * np.shape(card)[1]))
+        # height_lower = int(round(v_fraction_lower * np.shape(card)[1]))
+        
+        # upper_left_card = card[height_upper:height_lower, width_left:width_right, :]
+        
+        # # plt.imshow(upper_left_card)
+        # # plt.show()
+        
+        # lower_white = (170, 160, 140)
+        # upper_white = (255, 255, 255)
+        
+        # # lower_green = (50, 200, 50)
+        # # upper_green = (200, 256, 200)
+        
+        # # lower_red = (250, 50, 50)
+        # # upper_red = (256, 70, 70)
+        
+        # mask = cv2.inRange(upper_left_card, lower_white, upper_white)
+        
+        # #mask = cv2.resize(mask, (28, 28), interpolation = cv2.INTER_AREA)
+        
+        # mask = 255 - mask
+        
+        # mask = np.stack((mask,)*3, axis=-1)
+        
+        # # plt.imshow(mask)
+        # # plt.show()
+        
+        # ref_digits.append(mask)
+        
+        # im = Image.fromarray(upper_left_card)
+        # active_hash = imagehash.phash(im)
+        # digit_hashes.append(active_hash)
 
 def train_keras_digit_classifier():
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -998,7 +1131,8 @@ def transition_home_game_select():
 
 if __name__ == "__main__":
     
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Users\bwoodhouse\AppData\Local\Tesseract-OCR\tesseract.exe'
+    #pytesseract.pytesseract.tesseract_cmd = r'C:\Users\bwoodhouse\AppData\Local\Tesseract-OCR\tesseract.exe'
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Users\Brent\AppData\Local\Tesseract-OCR\tesseract'
     
     # image = cv2.imread('./development_screenshots/tesseract_test.png')
     # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -1024,7 +1158,9 @@ if __name__ == "__main__":
     
     #digit_hashes = train_digit_classifier()
     
-    identify_board()
+    train_digit_classifier()
+    identify_mulligan_choices()
+    #identify_board()
     
     #action_hard_pass()
     
