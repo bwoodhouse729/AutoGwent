@@ -581,7 +581,7 @@ def identify_card(card):
     # poisoned
     # resilience
     # rupture
-    # shield
+    # shield: may need to hover mouse over card if this is present
     # spying
     # veil
     # all but locked show up on left hand side
