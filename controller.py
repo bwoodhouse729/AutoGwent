@@ -30,11 +30,11 @@ import cv2
 from glob import glob
 import imagehash
 import imageio
-from keras.datasets import mnist
-from keras.models import load_model
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
-from keras.utils import to_categorical
+# from keras.datasets import mnist
+# from keras.models import load_model
+# from keras.models import Sequential
+# from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
+# from keras.utils import to_categorical
 from matplotlib import cm
 from matplotlib import pyplot as plt
 import numpy as np
@@ -311,21 +311,21 @@ def classify_card_image(card):
     
     return best_match
 
-def classify_digit_keras(image):
+# def classify_digit_keras(image):
     
-    image = cv2.resize(image, (28, 28), interpolation = cv2.INTER_AREA)
+#     image = cv2.resize(image, (28, 28), interpolation = cv2.INTER_AREA)
     
-    model = load_model("./classifier/keras_model.h5")
+#     model = load_model("./classifier/keras_model.h5")
 
-    img_rows = 28
-    img_cols = 28
-    image = image.reshape(1, img_rows, img_cols, 1)
+#     img_rows = 28
+#     img_cols = 28
+#     image = image.reshape(1, img_rows, img_cols, 1)
     
-    image = image / 255
+#     image = image / 255
 
-    # predict digit
-    prediction = model.predict(image)
-    return prediction.argmax()
+#     # predict digit
+#     prediction = model.predict(image)
+#     return prediction.argmax()
 
 def end_game():
     # click in a few places to move back to primary menu
@@ -345,7 +345,8 @@ def identify_board():
     
     # TODO: Could restrict to units and artifacts for classification here
     
-    image = cv2.imread('./development_screenshots/sample_board_9_cards.png')
+    image = cv2.imread('./development_screenshots/sample_vitality_shield.png')
+    #image = cv2.imread('./development_screenshots/sample_board_9_cards.png')
     #image = cv2.imread('./development_screenshots/sample_board_8_cards.png')
     #image = cv2.imread('./development_screenshots/sample_armor.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -424,7 +425,7 @@ def identify_board():
                 #print(estimated_count)
             else:
                 i += 1
-        print('Estimated Card Count: ' + str(estimated_count))
+        #print('Estimated Card Count: ' + str(estimated_count))
         
         # Recover all cards based on estimated count, then identify them
         if estimated_count % 2 == 0 and estimated_count > 0:
@@ -521,10 +522,39 @@ def identify_card(card):
     height_lower = int(round(v_fraction_lower * np.shape(card)[0]))
     
     upper_left_card = card[height_upper:height_lower, width_left:width_right, :]
+    
+    # filter out orange from shield
+    upper_left_hsv = cv2.cvtColor(upper_left_card, cv2.COLOR_RGB2HSV)
+    
+    lower_green = np.array([55, 50, 50])
+    upper_green = np.array([65, 255, 255])
+    lower_red = np.array([0, 170, 50])
+    upper_red = np.array([20, 220, 256])
+    lower_white = np.array([10, 20, 0])
+    upper_white = np.array([30, 60, 255])
+    
+    mask1 = cv2.inRange(upper_left_hsv, lower_green, upper_green)
+    mask2 = cv2.inRange(upper_left_hsv, lower_red, upper_red)
+    mask3 = cv2.inRange(upper_left_hsv, lower_white, upper_white)
+    
+    # plt.imshow(mask3)
+    # plt.show()
+    
+    mask = mask1 | mask2 | mask3
+    
+    # plt.imshow(mask)
+    # plt.show()
+    
+    upper_left_card = cv2.bitwise_and(upper_left_card,upper_left_card,mask = mask)
+    
+    # plt.imshow(upper_left_card)
+    # plt.show()
+    
     upper_left_card = cv2.cvtColor(upper_left_card, cv2.COLOR_RGB2GRAY)
     
-    upper_left_card = cv2.GaussianBlur(upper_left_card,(5,5),0)
-    ret3, upper_left_card = cv2.threshold(upper_left_card,127,255,cv2.THRESH_BINARY)#+cv2.THRESH_OTSU
+    #upper_left_card = cv2.GaussianBlur(upper_left_card,(5,5),0)
+    
+    # ret3, upper_left_card = cv2.threshold(upper_left_card,127,255,cv2.THRESH_BINARY)#+cv2.THRESH_OTSU
     #upper_left_card = 255 - upper_left_card
     
     # plt.imshow(upper_left_card)
@@ -616,7 +646,7 @@ def identify_enemy_passed():
 
 def identify_number(image):
     # remove corners
-    jump_in = 25
+    jump_in = 18
     for i in range(jump_in):
         for j in range(jump_in):
             if i < jump_in - j:
@@ -1015,59 +1045,59 @@ def train_digit_classifier():
         # active_hash = imagehash.phash(im)
         # digit_hashes.append(active_hash)
 
-def train_keras_digit_classifier():
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
-    # index = 35
-    # print(y_train[index])
-    # plt.imshow(x_train[index], cmap='Greys')
-    # plt.show()
-    # print(x_train.shape, x_test.shape)
+# def train_keras_digit_classifier():
+#     (x_train, y_train), (x_test, y_test) = mnist.load_data()
+#     # index = 35
+#     # print(y_train[index])
+#     # plt.imshow(x_train[index], cmap='Greys')
+#     # plt.show()
+#     # print(x_train.shape, x_test.shape)
     
-    # save input image dimensions
-    img_rows, img_cols = 28, 28
+#     # save input image dimensions
+#     img_rows, img_cols = 28, 28
     
-    x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
-    x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
+#     x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
+#     x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
     
-    x_train = x_train / 255
-    x_test = x_test / 255
+#     x_train = x_train / 255
+#     x_test = x_test / 255
     
-    num_classes = 10
+#     num_classes = 10
 
-    y_train = to_categorical(y_train, num_classes)
-    y_test = to_categorical(y_test, num_classes)
+#     y_train = to_categorical(y_train, num_classes)
+#     y_test = to_categorical(y_test, num_classes)
     
-    model = Sequential()
-    model.add(Conv2D(32, kernel_size=(3, 3),
-     activation='relu',
-     input_shape=(img_rows, img_cols, 1)))
-    model.add(Conv2D(64, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-    model.add(Flatten())
-    model.add(Dense(128, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(num_classes, activation='softmax'))
+#     model = Sequential()
+#     model.add(Conv2D(32, kernel_size=(3, 3),
+#      activation='relu',
+#      input_shape=(img_rows, img_cols, 1)))
+#     model.add(Conv2D(64, (3, 3), activation='relu'))
+#     model.add(MaxPooling2D(pool_size=(2, 2)))
+#     model.add(Dropout(0.25))
+#     model.add(Flatten())
+#     model.add(Dense(128, activation='relu'))
+#     model.add(Dropout(0.5))
+#     model.add(Dense(num_classes, activation='softmax'))
     
-    # model.compile(loss='sparse_categorical_crossentropy',
-    #   optimizer='adam',
-    #   metrics=['accuracy'])
-    model.compile(loss='categorical_crossentropy',
-      optimizer='adam',
-      metrics=['accuracy'])
+#     # model.compile(loss='sparse_categorical_crossentropy',
+#     #   optimizer='adam',
+#     #   metrics=['accuracy'])
+#     model.compile(loss='categorical_crossentropy',
+#       optimizer='adam',
+#       metrics=['accuracy'])
     
-    batch_size = 128
-    epochs = 10
+#     batch_size = 128
+#     epochs = 10
     
-    model.fit(x_train, y_train,
-              batch_size=batch_size,
-              epochs=epochs,
-              verbose=1,
-              validation_data=(x_test, y_test))
-    score = model.evaluate(x_test, y_test, verbose=0)
-    print('Test loss:', score[0])
-    print('Test accuracy:', score[1])
-    model.save("./classifier/keras_model.h5")
+#     model.fit(x_train, y_train,
+#               batch_size=batch_size,
+#               epochs=epochs,
+#               verbose=1,
+#               validation_data=(x_test, y_test))
+#     score = model.evaluate(x_test, y_test, verbose=0)
+#     print('Test loss:', score[0])
+#     print('Test accuracy:', score[1])
+#     model.save("./classifier/keras_model.h5")
         
 def transition_game_select_play_standard():
     # click to play a standard game, then wait for mulligan screen
@@ -1106,7 +1136,7 @@ if __name__ == "__main__":
     time.sleep(3)
     
     # uncomment to take screenshot for development
-    take_screenshot()
+    #take_screenshot()
     
     # uncomment to create image hash references based on image library of cards
     # names, hashes = train_card_classifier()
@@ -1121,10 +1151,10 @@ if __name__ == "__main__":
     
     #digit_hashes = train_digit_classifier()
     
-    #train_digit_classifier()
+    train_digit_classifier()
     #identify_mulligan_choices()
     
-    #identify_board()
+    identify_board()
     
     #action_hard_pass()
     
