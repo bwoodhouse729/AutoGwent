@@ -634,6 +634,26 @@ def identify_card(card):
     # plt.imshow(vitality_bleed_image)
     # plt.show()
     
+    # TODO: Extract status images once each
+    # shield = card[312:350, 12:57, :]
+    # if name == 'temerian drummer':
+    #     shield_bgr = cv2.cvtColor(shield, cv2.COLOR_RGB2BGR)
+    #     cv2.imwrite('./statuses/shield.png', shield_bgr)
+    
+    # TODO: Search for status images on left column
+    
+    files = glob('./statuses/*.png')
+    for file in files:
+        image = cv2.imread(file)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        res = cv2.matchTemplate(card[:, 10:60, :],image,cv2.TM_CCOEFF_NORMED)
+        threshold = 0.8
+        
+        if (len(np.where(res > threshold)[0]) > 0):
+            print('Shield')
+            
+    
     # defender
     # doomed
     # immunity
@@ -641,7 +661,7 @@ def identify_card(card):
     # poisoned
     # resilience
     # rupture
-    # shield: may need to hover mouse over card if this is present
+    # shield
     # spying
     # veil
     # all but locked show up on left hand side
