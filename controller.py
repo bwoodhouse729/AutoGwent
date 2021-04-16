@@ -1106,7 +1106,7 @@ if __name__ == "__main__":
     time.sleep(3)
     
     # uncomment to take screenshot for development
-    #take_screenshot()
+    take_screenshot()
     
     # uncomment to create image hash references based on image library of cards
     # names, hashes = train_card_classifier()
@@ -1119,12 +1119,12 @@ if __name__ == "__main__":
     
     #train_keras_digit_classifier()
     
-    digit_hashes = train_digit_classifier()
+    #digit_hashes = train_digit_classifier()
     
     #train_digit_classifier()
     #identify_mulligan_choices()
     
-    identify_board()
+    #identify_board()
     
     #action_hard_pass()
     
