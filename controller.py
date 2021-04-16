@@ -573,10 +573,23 @@ def identify_card(card):
         print('Armor: ' + str(armor))
     
     # TODO: Identify card statuses
-    
+    # vitality or bleed (with amount) or neither
+    # defender
+    # doomed
+    # immunity
+    # locked
+    # poisoned
+    # resilience
+    # rupture
+    # shield
+    # spying
+    # veil
+    # all but locked show up on left hand side
+    # don't plan for more than 3 at once
+    # TODO: Obtain an example of each
     
     # TODO: Identify presence of card order ability
-    # TODO: Identify order ability status (gray, red, or green) if present
+    # TODO: Identify order ability status (gray, red, green, or locked) if present
     # TODO: Identify number of order charges if present
 
 def identify_card_choices():
