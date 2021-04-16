@@ -604,6 +604,36 @@ def identify_card(card):
     
     # TODO: Identify card statuses
     # vitality or bleed (with amount) or neither
+    vitality_bleed_image = card[60:100, 10:60, :]
+    
+    lower_bound_green = np.array([30, 0, 0])
+    upper_bound_green = np.array([50, 256, 256])
+    
+    # check for green or red color
+    vitality_bleed_hsv = cv2.cvtColor(vitality_bleed_image, cv2.COLOR_RGB2HSV)
+    
+    mask = cv2.inRange(vitality_bleed_hsv, lower_bound_green, upper_bound_green)
+    # plt.imshow(mask)
+    # plt.show()
+    if np.sum(mask) > 100 * 255:
+        # Find vitality number
+        vitality_image = card[105:148, 20:55, :]
+        vitality_image_hsv = cv2.cvtColor(vitality_image, cv2.COLOR_RGB2HSV)
+        
+        lower_white = np.array([10, 20, 0])
+        upper_white = np.array([30, 60, 255])
+        
+        mask = cv2.inRange(vitality_image_hsv, lower_white, upper_white)
+        
+        vitality_amount = identify_number(mask)
+        print('Vitality: ' + str(vitality_amount))
+        
+        # plt.imshow(mask)
+        # plt.show()
+        
+    # plt.imshow(vitality_bleed_image)
+    # plt.show()
+    
     # defender
     # doomed
     # immunity
