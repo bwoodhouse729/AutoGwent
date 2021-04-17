@@ -318,10 +318,10 @@ def identify_board():
     
     # TODO: Could restrict to units and artifacts for classification here
     
-    #image = cv2.imread('./development_screenshots/sample_vitality_shield.png')
+    image = cv2.imread('./development_screenshots/sample_vitality_shield.png')
     #image = cv2.imread('./development_screenshots/sample_board_9_cards.png')
     #image = cv2.imread('./development_screenshots/sample_board_8_cards.png')
-    image = cv2.imread('./development_screenshots/sample_armor.png')
+    #image = cv2.imread('./development_screenshots/sample_armor.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     diamond_heights = [134, 267, 422, 589]
@@ -643,18 +643,19 @@ def identify_card(card):
     #     shield_bgr = cv2.cvtColor(shield, cv2.COLOR_RGB2BGR)
     #     cv2.imwrite('./statuses/shield.png', shield_bgr)
     
-    # TODO: Search for status images on left column
-    
+    # Search for status images on left column
     files = glob('./statuses/*.png')
     for file in files:
         image = cv2.imread(file)
+        file = file.replace('\\', '/')
+        status_name = file.split('/')[-1][:-4]
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
         res = cv2.matchTemplate(card[:, 10:60, :],image,cv2.TM_CCOEFF_NORMED)
         threshold = 0.8
         
         if (len(np.where(res > threshold)[0]) > 0):
-            print('Shield')
+            print(status_name)
             
     # TODO: Obtain images for each card status
     # defender
@@ -1189,7 +1190,7 @@ if __name__ == "__main__":
     time.sleep(3)
     
     # uncomment to take screenshot for development
-    #take_screenshot()
+    take_screenshot()
     
     # uncomment to create image hash references based on image library of cards
     # names, hashes = train_card_classifier()
@@ -1204,10 +1205,10 @@ if __name__ == "__main__":
     
     #digit_hashes = train_digit_classifier()
     
-    train_digit_classifier()
+    #train_digit_classifier()
     #identify_mulligan_choices()
     
-    identify_board()
+    #identify_board()
     
     #action_hard_pass()
     
