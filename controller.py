@@ -259,33 +259,6 @@ def choose_mulligan():
 
 def classify_card_image(card):
     
-    # Improve classifications by using faction information from csv
-    # factions = ['Monsters', 'Nilfgaard', 'Northern Realms', 'Scoia\'tael', 'Skellige', 'Syndicate']
-    # rgb_colors = np.array([[[75, 22, 20], [22, 27, 29], [23, 51, 89], [51, 58, 17], [59, 47, 77], [83, 32, 0]]], np.float32)
-    # #print(rgb_colors)
-    # hsv_colors = cv2.cvtColor(rgb_colors, cv2.COLOR_RGB2HSV)
-    
-    # # TODO: Identify faction from background color in diamond
-    # x_percent = 10
-    # y_percent = 5
-    
-    # x = int(round(np.shape(card)[0] * x_percent / 100))
-    # y = int(round(np.shape(card)[0] * y_percent / 100))
-    
-    # rgb_faction = card[x:x+1, y:y+1, :]
-    # hsv_faction = cv2.cvtColor(rgb_faction, cv2.COLOR_RGB2HSV)
-    # #print(hsv_faction)
-    
-    # best_faction = ''
-    # min_distance = 10000
-    # for i in range(len(factions)):
-    #     distance = np.linalg.norm(rgb_faction[0] - rgb_colors[0][i])
-    #     # distance = abs(hsv_faction[0][0][0] - hsv_colors[0][i][0])
-    #     if distance < min_distance:
-    #         best_faction = factions[i]
-    #         min_distance = distance
-    # print(best_faction)
-    
     fraction_x = 0.2
     fraction_y = 0.25
     image = card[int(card.shape[0] * fraction_x):-int(card.shape[0] * fraction_x), int(card.shape[1] * fraction_y):-int(card.shape[1] * fraction_y)]
@@ -345,10 +318,10 @@ def identify_board():
     
     # TODO: Could restrict to units and artifacts for classification here
     
-    image = cv2.imread('./development_screenshots/sample_vitality_shield.png')
+    #image = cv2.imread('./development_screenshots/sample_vitality_shield.png')
     #image = cv2.imread('./development_screenshots/sample_board_9_cards.png')
     #image = cv2.imread('./development_screenshots/sample_board_8_cards.png')
-    #image = cv2.imread('./development_screenshots/sample_armor.png')
+    image = cv2.imread('./development_screenshots/sample_armor.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     diamond_heights = [134, 267, 422, 589]
@@ -496,6 +469,34 @@ def identify_card(card):
     name = classify_card_image(card)
     print('Name: ' + name)
     
+    # TODO: Identify card faction?  May not need this if card name is super reliable.
+    # Improve classifications by using faction information from csv
+    # factions = ['Monsters', 'Nilfgaard', 'Northern Realms', 'Scoia\'tael', 'Skellige', 'Syndicate']
+    # rgb_colors = np.array([[[75, 22, 20], [22, 27, 29], [23, 51, 89], [51, 58, 17], [59, 47, 77], [83, 32, 0]]], np.float32)
+    # #print(rgb_colors)
+    # hsv_colors = cv2.cvtColor(rgb_colors, cv2.COLOR_RGB2HSV)
+    
+    # # TODO: Identify faction from background color in diamond
+    # x_percent = 10
+    # y_percent = 5
+    
+    # x = int(round(np.shape(card)[0] * x_percent / 100))
+    # y = int(round(np.shape(card)[0] * y_percent / 100))
+    
+    # rgb_faction = card[x:x+1, y:y+1, :]
+    # hsv_faction = cv2.cvtColor(rgb_faction, cv2.COLOR_RGB2HSV)
+    # #print(hsv_faction)
+    
+    # best_faction = ''
+    # min_distance = 10000
+    # for i in range(len(factions)):
+    #     distance = np.linalg.norm(rgb_faction[0] - rgb_colors[0][i])
+    #     # distance = abs(hsv_faction[0][0][0] - hsv_colors[0][i][0])
+    #     if distance < min_distance:
+    #         best_faction = factions[i]
+    #         min_distance = distance
+    # print(best_faction)
+    
     # TODO: Recognize the back of cards as well for traps
     # TODO: Copy cardbacks from site
     
@@ -528,10 +529,10 @@ def identify_card(card):
     
     lower_green = np.array([55, 50, 50])
     upper_green = np.array([65, 255, 255])
-    lower_red = np.array([0, 170, 50])
+    lower_red = np.array([0, 190, 150])
     upper_red = np.array([20, 220, 256])
-    lower_white = np.array([10, 20, 0])
-    upper_white = np.array([30, 60, 255])
+    lower_white = np.array([20, 20, 0])
+    upper_white = np.array([40, 80, 255])
     
     mask1 = cv2.inRange(upper_left_hsv, lower_green, upper_green)
     mask2 = cv2.inRange(upper_left_hsv, lower_red, upper_red)
@@ -545,12 +546,14 @@ def identify_card(card):
     # plt.imshow(mask)
     # plt.show()
     
-    upper_left_card = cv2.bitwise_and(upper_left_card,upper_left_card,mask = mask)
+    upper_left_card = mask
     
     # plt.imshow(upper_left_card)
     # plt.show()
     
-    upper_left_card = cv2.cvtColor(upper_left_card, cv2.COLOR_RGB2GRAY)
+    #upper_left_card = cv2.cvtColor(upper_left_card, cv2.COLOR_RGB2GRAY)
+    
+    #_, upper_left_card = cv2.threshold(upper_left_card, 10, 255, cv2.THRESH_BINARY)
     
     #upper_left_card = cv2.GaussianBlur(upper_left_card,(5,5),0)
     
@@ -653,7 +656,7 @@ def identify_card(card):
         if (len(np.where(res > threshold)[0]) > 0):
             print('Shield')
             
-    
+    # TODO: Obtain images for each card status
     # defender
     # doomed
     # immunity
@@ -696,7 +699,7 @@ def identify_enemy_passed():
 
 def identify_number(image):
     # remove corners
-    jump_in = 18
+    jump_in = 22
     for i in range(jump_in):
         for j in range(jump_in):
             if i < jump_in - j:
