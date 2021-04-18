@@ -657,7 +657,7 @@ def identify_card(card):
         if (len(np.where(res > threshold)[0]) > 0):
             print(status_name)
             
-    # TODO: Obtain images for each card status
+    # TODO: Obtain sample for each card status
     # defender
     # doomed
     # immunity
@@ -670,11 +670,10 @@ def identify_card(card):
     # veil
     # all but locked show up on left hand side
     # don't plan for more than 3 at once
-    # TODO: Obtain an example of each
     
     # TODO: Identify presence of card order ability
-    # TODO: Identify order ability status (gray, red, green, or locked) if present
-    # TODO: Identify number of order charges if present
+    # TODO: Identify order ability status (gray, red, green, locked, or cooldown) if present
+    # TODO: Identify number of order charges or cooldown amount if present
 
 def identify_card_choices():
     # identify cards to choose from in choice screen
