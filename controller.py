@@ -318,10 +318,19 @@ def identify_board():
     
     # TODO: Could restrict to units and artifacts for classification here
     
-    image = cv2.imread('./development_screenshots/sample_vitality_shield.png')
+    #image = cv2.imread('./development_screenshots/sample_bleed.png')
+    #image = cv2.imread('./development_screenshots/sample_defender.png')
+    #image = cv2.imread('./development_screenshots/sample_doomed.png')
+    #image = cv2.imread('./development_screenshots/sample_immunity_sleeping_order.png')
+    #image = cv2.imread('./development_screenshots/sample_poison.png')
+    #image = cv2.imread('./development_screenshots/sample_resilience.png')
+    #image = cv2.imread('./development_screenshots/sample_rupture.png')
+    #image = cv2.imread('./development_screenshots/sample_spying_locked_cooldown_veil.png')
+    #image = cv2.imread('./development_screenshots/sample_vitality_shield.png')
     #image = cv2.imread('./development_screenshots/sample_board_9_cards.png')
     #image = cv2.imread('./development_screenshots/sample_board_8_cards.png')
     #image = cv2.imread('./development_screenshots/sample_armor.png')
+    image = cv2.imread('./development_screenshots/sample_order_red_charge.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     diamond_heights = [134, 267, 422, 589]
@@ -348,18 +357,18 @@ def identify_board():
                         [[384, 425], [384, 533], [384, 639], [384, 745], [384, 851], [384, 957], [384, 1063], [384, 1169], [384, 1275]],
                         [[554, 404], [554, 517], [554, 629], [554, 741], [554, 853], [554, 966], [554, 1077], [554, 1189], [554, 1301]],
                         [[733, 382], [733, 501], [733, 620], [733, 739], [733, 856], [733, 975], [733, 1093], [733, 1211], [733, 1330]]]
-    upper_lefts_even = [[[121, 414], [121, 511], [121, 608], [121, 702], [121, 801], [121, 897], [121, 994], [121, 1091]],
-                        [[252, 395], [252, 497], [252, 598], [252, 699], [252, 801], [252, 902], [252, 1004], [252, 1106]],
-                        [[407, 374], [407, 479], [407, 586], [407, 694], [407, 801], [407, 908], [407, 1015], [407, 1123]],
-                        [[569, 348], [569, 462], [569, 576], [569, 688], [569, 801], [569, 914], [569, 1027], [569, 1139]]]
+    upper_lefts_even = [[[121, 414], [121, 511], [121, 608], [121, 704], [121, 803], [121, 897], [121, 994], [121, 1091]],
+                        [[252, 395], [252, 497], [252, 598], [252, 701], [252, 803], [252, 902], [252, 1004], [252, 1106]],
+                        [[407, 374], [407, 479], [407, 586], [407, 696], [407, 803], [407, 908], [407, 1015], [407, 1123]],
+                        [[569, 348], [569, 462], [569, 576], [569, 690], [569, 803], [569, 914], [569, 1027], [569, 1139]]]
     upper_rights_even = [[[121, 505], [121, 603], [121, 700], [121, 796], [121, 893], [121, 990], [121, 1086], [121, 1182]],
                         [[252, 491], [252, 593], [252, 694], [252, 795], [252, 897], [252, 999], [252, 1101], [252, 1202]],
                         [[407, 474], [407, 582], [407, 689], [407, 797], [407, 904], [407, 1010], [407, 1116], [407, 1224]],
                         [[569, 458], [569, 570], [569, 683], [569, 796], [569, 908], [569, 1021], [569, 1134], [569, 1247]]]
-    lower_lefts_even = [[[240, 398], [240, 498], [240, 599], [240, 699], [240, 800], [240, 901], [240, 1002], [240, 1103]],
-                        [[384, 376], [384, 483], [384, 589], [384, 695], [384, 801], [384, 906], [384, 1012], [384, 1119]],
-                        [[554, 352], [554, 465], [554, 577], [554, 688], [554, 801], [554, 912], [554, 1024], [554, 1136]],
-                        [[734, 327], [734, 445], [734, 563], [734, 683], [734, 801], [734, 919], [734, 1037], [734, 1156]]]
+    lower_lefts_even = [[[240, 398], [240, 498], [240, 599], [240, 701], [240, 803], [240, 901], [240, 1002], [240, 1103]],
+                        [[384, 376], [384, 483], [384, 589], [384, 697], [384, 804], [384, 906], [384, 1012], [384, 1119]],
+                        [[554, 352], [554, 465], [554, 577], [554, 690], [554, 804], [554, 912], [554, 1024], [554, 1136]],
+                        [[734, 327], [734, 445], [734, 563], [734, 685], [734, 804], [734, 919], [734, 1037], [734, 1156]]]
     lower_rights_even = [[[240, 492], [240, 594], [240, 695], [240, 796], [240, 896], [240, 997], [240, 1098], [240, 1200]],
                         [[384, 477], [384, 583], [384, 690], [384, 796], [384, 901], [384, 1007], [384, 1113], [384, 1220]],
                         [[554, 460], [554, 573], [554, 684], [554, 797], [554, 908], [554, 1020], [554, 1132], [554, 1246]],
@@ -512,8 +521,8 @@ def identify_card(card):
     # isolate upper left of card
     h_fraction_left = 0.05
     h_fraction_right = 0.28
-    v_fraction_upper = 0.04
-    v_fraction_lower = 0.18
+    v_fraction_upper = 0.05
+    v_fraction_lower = 0.16
     #v_fraction = # 0.31
     
     width_left = int(round(h_fraction_left * np.shape(card)[1]))
@@ -527,18 +536,18 @@ def identify_card(card):
     # filter out orange from shield
     upper_left_hsv = cv2.cvtColor(upper_left_card, cv2.COLOR_RGB2HSV)
     
-    lower_green = np.array([55, 50, 50])
+    lower_green = np.array([55, 50, 100])
     upper_green = np.array([65, 255, 255])
     lower_red = np.array([0, 190, 150])
     upper_red = np.array([20, 220, 256])
     lower_white = np.array([20, 20, 0])
-    upper_white = np.array([40, 80, 255])
+    upper_white = np.array([25, 60, 255])
     
     mask1 = cv2.inRange(upper_left_hsv, lower_green, upper_green)
     mask2 = cv2.inRange(upper_left_hsv, lower_red, upper_red)
     mask3 = cv2.inRange(upper_left_hsv, lower_white, upper_white)
     
-    # plt.imshow(mask3)
+    # plt.imshow(mask1)
     # plt.show()
     
     mask = mask1 | mask2 | mask3
@@ -568,10 +577,9 @@ def identify_card(card):
     power = identify_number(upper_left_card)
     print('Power: ' + str(power))
     
-    # TODO: Identify card armor
-    # First check if card has any armor via shield icon
+    # Identify card armor
     # Isolate upper right of card image
-    # Count and threshold number of yellow-ish pixels
+    # TODO: Count number of yellow-ish pixels?
     armor_present = False
     
     h_fraction_left = 0.25
@@ -596,7 +604,7 @@ def identify_card(card):
     # plt.show()
     
     armor_image = cv2.cvtColor(armor_image, cv2.COLOR_RGB2GRAY)
-    if np.sum(mask) > 100:
+    if np.sum(mask) > 200 * 255:
         armor_present = True
     #print(armor_present)
     if armor_present:
@@ -605,12 +613,11 @@ def identify_card(card):
         armor = identify_number(mask)
         print('Armor: ' + str(armor))
     
-    # TODO: Identify card statuses
-    # vitality or bleed (with amount) or neither
-    vitality_bleed_image = card[60:100, 10:60, :]
+    # Identify vitality or bleed (with amount) or neither
+    vitality_bleed_image = card[66:100, 10:60, :]
     
-    lower_bound_green = np.array([30, 0, 0])
-    upper_bound_green = np.array([50, 256, 256])
+    lower_bound_green = np.array([35, 100, 100])
+    upper_bound_green = np.array([45, 256, 256])
     
     # check for green or red color
     vitality_bleed_hsv = cv2.cvtColor(vitality_bleed_image, cv2.COLOR_RGB2HSV)
@@ -618,7 +625,7 @@ def identify_card(card):
     mask = cv2.inRange(vitality_bleed_hsv, lower_bound_green, upper_bound_green)
     # plt.imshow(mask)
     # plt.show()
-    if np.sum(mask) > 100 * 255:
+    if np.sum(mask) > 200 * 255:
         # Find vitality number
         vitality_image = card[105:148, 20:55, :]
         vitality_image_hsv = cv2.cvtColor(vitality_image, cv2.COLOR_RGB2HSV)
@@ -633,31 +640,30 @@ def identify_card(card):
         
         # plt.imshow(mask)
         # plt.show()
+    
+    lower_bound_red = np.array([-4, 100, 100])
+    upper_bound_red = np.array([4, 256, 256])
+    
+    mask = cv2.inRange(vitality_bleed_hsv, lower_bound_red, upper_bound_red)
+    # plt.imshow(mask)
+    # plt.show()
+    if np.sum(mask) > 200 * 255:
+        # Find vitality number
+        vitality_image = card[105:148, 20:55, :]
+        vitality_image_hsv = cv2.cvtColor(vitality_image, cv2.COLOR_RGB2HSV)
+        
+        lower_white = np.array([10, 20, 0])
+        upper_white = np.array([30, 60, 255])
+        
+        mask = cv2.inRange(vitality_image_hsv, lower_white, upper_white)
+        
+        bleed_amount = identify_number(mask)
+        print('Bleed: ' + str(bleed_amount))
         
     # plt.imshow(vitality_bleed_image)
     # plt.show()
     
-    # TODO: Extract status images once each
-    # shield = card[312:350, 12:57, :]
-    # if name == 'temerian drummer':
-    #     shield_bgr = cv2.cvtColor(shield, cv2.COLOR_RGB2BGR)
-    #     cv2.imwrite('./statuses/shield.png', shield_bgr)
-    
-    # Search for status images on left column
-    files = glob('./statuses/*.png')
-    for file in files:
-        image = cv2.imread(file)
-        file = file.replace('\\', '/')
-        status_name = file.split('/')[-1][:-4]
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        
-        res = cv2.matchTemplate(card[:, 10:60, :],image,cv2.TM_CCOEFF_NORMED)
-        threshold = 0.8
-        
-        if (len(np.where(res > threshold)[0]) > 0):
-            print(status_name)
-            
-    # TODO: Obtain sample for each card status
+    # Card statuses identified
     # defender
     # doomed
     # immunity
@@ -671,9 +677,47 @@ def identify_card(card):
     # all but locked show up on left hand side
     # don't plan for more than 3 at once
     
-    # TODO: Identify presence of card order ability
+    # Extract status images once each
+    # veil = card[312:350, 16:60, :]
+    # plt.imshow(veil)
+    # plt.show()
+    # if name == 'temerian drummer':
+    #     shield_bgr = cv2.cvtColor(shield, cv2.COLOR_RGB2BGR)
+    #     cv2.imwrite('./statuses/Shield.png', shield_bgr)
+    
+    # Search for status images on left column
+    files = glob('./statuses/*.png')
+    for file in files:
+        image = cv2.imread(file)
+        file = file.replace('\\', '/')
+        status_name = file.split('/')[-1][:-4]
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        # plt.imshow(card[:, 10:70, :])
+        # plt.show()
+        
+        res = cv2.matchTemplate(card[:, 10:70, :],image,cv2.TM_CCOEFF_NORMED)
+        threshold = 0.80
+        
+        if (len(np.where(res > threshold)[0]) > 0):
+            print(status_name)
+    
+    # TODO: Identify presence of card order/charge/cooldown ability
     # TODO: Identify order ability status (gray, red, green, locked, or cooldown) if present
     # TODO: Identify number of order charges or cooldown amount if present
+    
+    # TODO: Identify if a card is boosted, damaged, or neither from power color
+    
+    # TODO: Collect example image with special card, and artifact
+    # TODO: Recognize stratagem, artifact, and special card symbols and don't identify power in those cases
+    
+    # TODO: Improve identification of 2-digit power/armor
+    # This relies on optimizing the cutoff of the corners
+    # Also have an issue identifying gap between digits
+    
+    # TODO: Single digit identification is not perfect
+    
+    # TODO: Put all collected information into the Card datatype
 
 def identify_card_choices():
     # identify cards to choose from in choice screen
@@ -698,6 +742,10 @@ def identify_enemy_passed():
     pass
 
 def identify_number(image):
+    
+    # plt.imshow(image, 'gray')
+    # plt.show()
+    
     # remove corners
     jump_in = 22
     for i in range(jump_in):
@@ -707,23 +755,25 @@ def identify_number(image):
                 image[image.shape[0] - i - 1, j] = 0
                 image[i, image.shape[1] - j - 1] = 0
                 image[image.shape[0] - i - 1, image.shape[1] - j - 1] = 0
-        
+    
+    min_count_kept = 5
+    
     # restrict to rows/columns with nonzero entries
     top = 0
-    while (np.sum(image[top, :]) < 4 * 255):
+    while (top < np.shape(image)[0] and np.sum(image[top, :]) < min_count_kept * 255):
         top += 1
         
     bottom = image.shape[0] - 1
-    while (np.sum(image[bottom, :]) < 4 * 255):
+    while (bottom >= 0 and np.sum(image[bottom, :]) < min_count_kept * 255):
         bottom -= 1
     bottom += 1
     
     left = 0
-    while (np.sum(image[:, left]) < 4 * 255):
+    while (left < np.shape(image)[1] and np.sum(image[:, left]) < min_count_kept * 255):
         left += 1
         
     right = image.shape[1] - 1
-    while (np.sum(image[:, right]) < 4 * 255):
+    while (right >= 0 and np.sum(image[:, right]) < min_count_kept * 255):
         right -= 1
     right += 1
     
@@ -769,8 +819,11 @@ def identify_number(image):
                 min_mse = mse
                 best_digit = i
         digit_string += str(best_digit)
-        
-    power = int(digit_string)
+    
+    if represents_int(digit_string):
+        power = int(digit_string)
+    else:
+        power = 0
     
     return power
 
@@ -921,6 +974,13 @@ def make_mulligan():
     # Click on selected card
     pyautogui.dragTo(mulligan_centers[index][0], mulligan_centers[index][1], 0.1)
     pyautogui.click()
+
+def represents_int(s):
+    try: 
+        int(s)
+        return True
+    except ValueError:
+        return False
 
 def take_screenshot():
     # Screenshot the whole game window and save it out
@@ -1189,7 +1249,7 @@ if __name__ == "__main__":
     time.sleep(3)
     
     # uncomment to take screenshot for development
-    take_screenshot()
+    #take_screenshot()
     
     # uncomment to create image hash references based on image library of cards
     # names, hashes = train_card_classifier()
@@ -1204,10 +1264,10 @@ if __name__ == "__main__":
     
     #digit_hashes = train_digit_classifier()
     
-    #train_digit_classifier()
+    train_digit_classifier()
     #identify_mulligan_choices()
     
-    #identify_board()
+    identify_board()
     
     #action_hard_pass()
     
