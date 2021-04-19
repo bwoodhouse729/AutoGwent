@@ -716,6 +716,7 @@ def identify_card(card):
     # Also have an issue identifying gap between digits
     
     # TODO: Single digit identification is not perfect
+    # Try registering boundary of diamond?
     
     # TODO: Put all collected information into the Card datatype
 
