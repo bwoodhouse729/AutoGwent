@@ -743,16 +743,17 @@ def identify_enemy_passed():
     pass
 
 def identify_allied_hand():
-    image = cv2.imread('./development_screenshots/sample_order_red_charge.png')
+    image = cv2.imread('./development_screenshots/sample_hand_10_cards.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
-    # TODO: Identify number of cards in allied hand
-    
+    # TODO: Identify number of cards in allied hand using number in bottom right
+    plt.imshow(image)
+    plt.show()
     
     # TODO: Extract card images from allied hand
+    # Use upper left corner, upper right corner to extract upper-left quarter of card
     
-    
-    # TODO: Convert card images to name, power, armor
+    # TODO: Convert card images to name, power
     
     
 
@@ -1282,6 +1283,7 @@ if __name__ == "__main__":
     #train_digit_classifier()
     #identify_mulligan_choices()
     
+    identify_allied_hand()
     #identify_board()
     
     #action_hard_pass()
