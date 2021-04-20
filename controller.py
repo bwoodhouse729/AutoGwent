@@ -747,6 +747,9 @@ def identify_allied_hand():
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     # TODO: Identify number of cards in allied hand using number in bottom right
+    # 854, 1502, 30, 76
+    # Try to identify "/ 10" then look to the left of it
+    # Red text means 10 cards
     plt.imshow(image)
     plt.show()
     
