@@ -756,8 +756,12 @@ def identify_allied_hand():
     # TODO: Extract card images from allied hand
     # Use upper left corner, upper right corner to extract upper-left quarter of card
     # 0 cards to 10 cards
-    upper_left_corners = [[], [[736, 724]], ]
-    upper_right_corners = [[], [[736, 876]], ]
+    upper_left_corners = [[], [[736, 724]], [[738, 670], [736, 780]], 
+                          []]
+    upper_right_corners = [[], [[736, 876]], [[734, 817], [739, 930]],
+                           []]
+    lower_left_corners = [[], [[896, 724]], [[896, 675], [897, 776]],
+                          []]
     
     # TODO: Convert card images to name, power
     
