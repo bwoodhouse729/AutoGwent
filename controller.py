@@ -742,6 +742,20 @@ def identify_enemy_passed():
     # identify if the enemy has passed
     pass
 
+def identify_allied_hand():
+    image = cv2.imread('./development_screenshots/sample_order_red_charge.png')
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    
+    # TODO: Identify number of cards in allied hand
+    
+    
+    # TODO: Extract card images from allied hand
+    
+    
+    # TODO: Convert card images to name, power, armor
+    
+    
+
 def identify_number(image):
     
     # plt.imshow(image, 'gray')
@@ -1250,7 +1264,7 @@ if __name__ == "__main__":
     time.sleep(3)
     
     # uncomment to take screenshot for development
-    #take_screenshot()
+    take_screenshot()
     
     # uncomment to create image hash references based on image library of cards
     # names, hashes = train_card_classifier()
@@ -1265,10 +1279,10 @@ if __name__ == "__main__":
     
     #digit_hashes = train_digit_classifier()
     
-    train_digit_classifier()
+    #train_digit_classifier()
     #identify_mulligan_choices()
     
-    identify_board()
+    #identify_board()
     
     #action_hard_pass()
     
