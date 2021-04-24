@@ -677,6 +677,8 @@ def identify_card(card):
     # all but locked show up on left hand side
     # don't plan for more than 3 at once
     
+    # TODO: Include Bounty!
+    
     # Extract status images once each
     # veil = card[312:350, 16:60, :]
     # plt.imshow(veil)
