@@ -109,6 +109,7 @@ class Card:
 
 ref_names = []
 ref_hashes = []
+ref_hashes_hand = []
 digit_hashes = []
 ref_digits = []
 
@@ -284,6 +285,25 @@ def classify_card_image(card):
     
     return best_match
 
+def classify_hand_card_image(card):
+    im = Image.fromarray(card)
+    active_hash = imagehash.phash(im)
+    
+    min_distance = 1000000000
+    best_match = ''
+    for i in range(len(ref_hashes_hand)):
+        current_hash = ref_hashes_hand[i]
+        distance = 0
+        # for j in range(len(active_hash)):
+        #     if active_hash[j] != current_hash[j]:
+        #         distance += 1
+        distance = abs(active_hash - current_hash)
+        if distance < min_distance:
+            min_distance = distance
+            best_match = ref_names[i]
+    
+    return best_match
+
 # def classify_digit_keras(image):
     
 #     image = cv2.resize(image, (28, 28), interpolation = cv2.INTER_AREA)
@@ -302,10 +322,6 @@ def classify_card_image(card):
 
 def end_game():
     # click in a few places to move back to primary menu
-    pass
-
-def identify_allied_hand():
-    # Identify all cards in my hand, with their power/armor/icon status
     pass
 
 def identify_board():
@@ -748,14 +764,38 @@ def identify_allied_hand():
     image = cv2.imread('./development_screenshots/sample_hand_10_cards.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
-    # TODO: Identify number of cards in allied hand using number in bottom right
-    # 854, 1502, 30, 76
-    # Try to identify "/ 10" then look to the left of it
-    # Red text means 10 cards
-    plt.imshow(image)
-    plt.show()
+    # Identify number of cards in allied hand using number in bottom right
+    # Use all but last 3 symbols
     
-    # TODO: Extract card images from allied hand
+    hand_size_image = image[854:854+30, 1502:1502+76, :]
+    
+    # plt.imshow(hand_size_image)
+    # plt.show()
+    
+    hand_size_image_hsv = cv2.cvtColor(hand_size_image, cv2.COLOR_RGB2HSV)
+    
+    lower_red = np.array([-5, 150, 150])
+    upper_red = np.array([5, 256, 256])
+    
+    mask_1 = cv2.inRange(hand_size_image_hsv, lower_red, upper_red)
+    
+    lower_white = np.array([-5, -5, 150])
+    upper_white = np.array([5, 50, 255])
+    
+    mask_2 = cv2.inRange(hand_size_image_hsv, lower_white, upper_white)
+    
+    mask = mask_1 | mask_2
+    
+    # plt.imshow(mask)
+    # plt.show()
+    
+    hand_count = identify_number(mask)
+    if len(str(hand_count)) <= 3:
+        hand_count = 0
+    else:
+        hand_count = int(str(hand_count)[:-3])
+    
+    # Extract card images from allied hand
     # Use upper left corner, upper right corner to extract upper-left quarter of card
     # 0 cards to 10 cards
     upper_left_corners = [[], [[736, 724]], [[738, 670], [736, 780]], 
@@ -786,51 +826,149 @@ def identify_allied_hand():
                           [[897, 367], [898, 459], [897, 548], [898, 637], [897, 726], [898, 815], [898, 905], [897, 996], [898, 1088]],
                           [[898, 369], [898, 450], [898, 528], [898, 607], [898, 686], [898, 765], [898, 845], [899, 925], [899, 1005], [898, 1088]]]
     
-    # TODO: Convert card images to name, power
-    
+    for i in range(hand_count):
+        # Straighten and resize card before classification
+        half_width = (upper_right_corners[hand_count][i][1] - upper_left_corners[hand_count][i][1]) // 2
+        half_height = lower_left_edge[hand_count][i][0] - upper_left_corners[hand_count][i][0]
+        ul = upper_left_corners[hand_count][i]
+        ur = upper_right_corners[hand_count][i]
+        lle = lower_left_edge[hand_count][i]
+        # max_height in pixels: 65
+        corner_1 = (ul[1], ul[0])
+        corner_2 = ((ul[1] + ur[1]) // 2, (ul[0] + ur[0]) // 2)
+        unit_lle = np.array(lle) - np.array(ul)
+        unit_lle = unit_lle / np.linalg.norm(unit_lle)
+        #print(unit_lle)
+        max_height = 112 #105
+        corner_4 = (ul[1] + max_height * unit_lle[1], ul[0] + max_height * unit_lle[0])
+        corner_3 = (corner_4[0] + (corner_2[0] - corner_1[0]), corner_4[1] + (corner_2[1] - corner_1[1]))
+        corners = [corner_1, corner_2, corner_3, corner_4]
+        #print(corner_1, corner_2, corner_3, corner_4)
+        # corners = [(upper_left_corners[hand_count][i][1], upper_left_corners[hand_count][i][0]),
+        #             ((upper_left_corners[hand_count][i][1] + upper_right_corners[hand_count][i][1]) // 2, (upper_left_corners[hand_count][i][0] + upper_right_corners[hand_count][i][0]) // 2),
+        #             (lower_left_edge[hand_count][i][1] + (upper_right_corners[hand_count][i][1] - upper_left_corners[hand_count][i][1]) // 2,
+        #             lower_left_edge[hand_count][i][0] + (upper_right_corners[hand_count][i][0] - upper_left_corners[hand_count][i][0]) // 2),
+        #             (lower_left_edge[hand_count][i][1], lower_left_edge[hand_count][i][0])]
+        width = 125
+        height = 178
+        target = [(0, 0), (width, 0), (width, height), (0, height)]
+        H, _ = cv2.findHomography(np.array(corners), np.array(target))
+        
+        # Apply matrix H to source image.
+        card = cv2.warpPerspective(image, H, (width, height))
+
+        # cut off diamond
+        card = card[85:]
+
+        plt.imshow(card)
+        plt.show()
+        
+        name = classify_hand_card_image(card)
+        print(name)
+        
+        # TODO: Identify card power
+        
+        # TODO: Can identify armor, but must mouse over card
     
 
-def identify_number(image):
+def identify_digit(image):
     
-    # plt.imshow(image, 'gray')
+    # print(np.shape(image))
+    
+    if np.shape(image)[1] < 4:
+        return 1
+    
+    image = cv2.resize(image, (15, 25), interpolation = cv2.INTER_AREA)
+    
+    # plt.imshow(image)
     # plt.show()
     
-    # remove corners
-    jump_in = 22
-    for i in range(jump_in):
-        for j in range(jump_in):
-            if i < jump_in - j:
-                image[i, j] = 0
-                image[image.shape[0] - i - 1, j] = 0
-                image[i, image.shape[1] - j - 1] = 0
-                image[image.shape[0] - i - 1, image.shape[1] - j - 1] = 0
-    
-    min_count_kept = 5
-    
-    # restrict to rows/columns with nonzero entries
-    top = 0
-    while (top < np.shape(image)[0] and np.sum(image[top, :]) < min_count_kept * 255):
-        top += 1
+    best_match = -1
+    min_score = 1000000000000
+    for i in range(10):
+        ref_digit = ref_digits[i]
+        ref_digit = cv2.resize(ref_digit, (15, 25), interpolation = cv2.INTER_AREA)
         
-    bottom = image.shape[0] - 1
-    while (bottom >= 0 and np.sum(image[bottom, :]) < min_count_kept * 255):
-        bottom -= 1
-    bottom += 1
-    
-    left = 0
-    while (left < np.shape(image)[1] and np.sum(image[:, left]) < min_count_kept * 255):
-        left += 1
+        # plt.imshow(ref_digit)
+        # plt.show()
         
-    right = image.shape[1] - 1
-    while (right >= 0 and np.sum(image[:, right]) < min_count_kept * 255):
-        right -= 1
-    right += 1
+        #print(np.shape(ref_digit))
+        
+        score = np.linalg.norm(ref_digit - image)
+        if score < min_score:
+            min_score = score
+            best_match = i
     
-    image = image[top:bottom, left:right]
+    if best_match == 0:
+        
+        # threshold middle of image and potentially switch to 8
+        middle = image[9:15, 5:9]
+        threshold = 5
+        if np.sum(middle) > threshold * 255:
+            best_match = 8
+    elif best_match == 8:
+        
+        # threshold middle of image and potentially switch to 8
+        middle = image[9:15, 5:9]
+        threshold = 5
+        if np.sum(middle) <= threshold * 255:
+            best_match = 0
+    elif best_match == 3:
+        
+        # threshold lower right and potentially switch to 2
+        lower_right = image[8:11, 20:]
+        threshold = 5
+        if np.sum(lower_right) < threshold * 255:
+            best_match = 2
     
-    # plt.imshow(image, 'gray')
-    # plt.show()
+        # threshold left and potentially switch to 8
+        left = image[:, 0:2]
+        threshold = 20
+        if np.sum(left) > threshold * 255:
+            best_match = 8
+    elif best_match == 7:
+        # threshold lower right and potentially switch to 8
+        lower_right = image[17:, 10:]
+        threshold = 5
+        if np.sum(lower_right) > threshold * 255:
+            best_match = 3
     
+        # plt.imshow(image)
+        # plt.show()
+        
+        # ref_digit = ref_digits[2]
+        # ref_digit = cv2.resize(ref_digit, (25, 15), interpolation = cv2.INTER_AREA)
+        
+        # plt.imshow(ref_digit)
+        # plt.show()
+        
+        # ref_digit = ref_digits[3]
+        # ref_digit = cv2.resize(ref_digit, (25, 15), interpolation = cv2.INTER_AREA)
+        
+        # plt.imshow(ref_digit)
+        # plt.show()
+            
+    return best_match
+
+def identify_number(image, min_count_kept=2):
+    digits = isolate_digits(image, min_count_kept)
+    
+    built_string = ''
+    for i in range(len(digits)):
+        # plt.imshow(digits[i])
+        # plt.show()
+        #print(digits[i][0][0])
+        active_int = identify_digit(digits[i])
+        #print(active_int)
+        built_string += str(active_int)
+    
+    if represents_int(built_string):
+        return int(built_string)
+    else:
+        return -1
+
+
+def isolate_digits(image, min_count_kept):
     # Identify number of digits by scanning vertically left-to-right
     digit_count = 0
     hit = False
@@ -849,32 +987,132 @@ def identify_number(image):
         #print(i, hit)
     digit_ends.append(image.shape[1])
     
-    # print(str(digit_count) + ' digit(s)')
-    # print(digit_starts, digit_ends)
-    
-    digit_string = ''
-    
+    digits = []
     for i in range(len(digit_starts)):
-    
-        image_2 = image[:, digit_starts[i]:digit_ends[i]]
+        digit = image[:,digit_starts[i]:digit_ends[i]]
         
-        image_2 = cv2.resize(image_2, (50, 50), interpolation = cv2.INTER_AREA)
+        # restrict to rows/columns with nonzero entries
+        top = 0
+        #print(np.sum(digit[top, :]))
+        #print(min_count_kept)
+        while (top < np.shape(digit)[0] and np.sum(digit[top, :]) < min_count_kept * 255):
+            top += 1
+            
+        #print(top)
+            
+        bottom = digit.shape[0] - 1
+        while (bottom >= 0 and np.sum(digit[bottom, :]) < min_count_kept * 255):
+            bottom -= 1
+        bottom += 1
         
-        min_mse = 100000000000
-        for i in range(len(ref_digits)):
-            digit = ref_digits[i]
-            mse = np.sum((image_2.astype("float") - digit.astype("float")) ** 2)
-            if mse < min_mse:
-                min_mse = mse
-                best_digit = i
-        digit_string += str(best_digit)
+        left = 0
+        while (left < np.shape(digit)[1] and np.sum(digit[:, left]) < min_count_kept * 255):
+            left += 1
+            
+        right = digit.shape[1] - 1
+        while (right >= 0 and np.sum(digit[:, right]) < min_count_kept * 255):
+            right -= 1
+        right += 1
+        
+        digits.append(digit[top:bottom, left:right])
+        
+        # plt.imshow(digit[top:bottom, left:right])
+        # plt.show()
+        
+    return digits
+
+# def identify_number(image, remove_corners=True):
     
-    if represents_int(digit_string):
-        power = int(digit_string)
-    else:
-        power = 0
+#     # plt.imshow(image, 'gray')
+#     # plt.show()
     
-    return power
+#     # remove corners
+#     if remove_corners:
+#         jump_in = 22
+#         for i in range(jump_in):
+#             for j in range(jump_in):
+#                 if i < jump_in - j:
+#                     image[i, j] = 0
+#                     image[image.shape[0] - i - 1, j] = 0
+#                     image[i, image.shape[1] - j - 1] = 0
+#                     image[image.shape[0] - i - 1, image.shape[1] - j - 1] = 0
+    
+#     min_count_kept = 5
+    
+#     # restrict to rows/columns with nonzero entries
+#     top = 0
+#     while (top < np.shape(image)[0] and np.sum(image[top, :]) < min_count_kept * 255):
+#         top += 1
+        
+#     bottom = image.shape[0] - 1
+#     while (bottom >= 0 and np.sum(image[bottom, :]) < min_count_kept * 255):
+#         bottom -= 1
+#     bottom += 1
+    
+#     left = 0
+#     while (left < np.shape(image)[1] and np.sum(image[:, left]) < min_count_kept * 255):
+#         left += 1
+        
+#     right = image.shape[1] - 1
+#     while (right >= 0 and np.sum(image[:, right]) < min_count_kept * 255):
+#         right -= 1
+#     right += 1
+    
+#     image = image[top:bottom, left:right]
+    
+#     # plt.imshow(image, 'gray')
+#     # plt.show()
+    
+#     # Identify number of digits by scanning vertically left-to-right
+#     digit_count = 0
+#     hit = False
+#     previous_hit = False
+#     digit_starts = []
+#     digit_ends = []
+#     for i in range(np.shape(image)[1]):
+#         active_sum = np.sum(image[:, i])
+#         hit = (active_sum >= 3 * 255)
+#         if hit and not previous_hit:
+#             digit_count += 1
+#             digit_starts.append(i)
+#         if not hit and previous_hit:
+#             digit_ends.append(i)
+#         previous_hit = hit
+#         #print(i, hit)
+#     digit_ends.append(image.shape[1])
+    
+#     # print(str(digit_count) + ' digit(s)')
+#     # print(digit_starts, digit_ends)
+    
+#     digit_string = ''
+    
+#     for i in range(len(digit_starts)):
+    
+#         image_2 = image[:, digit_starts[i]:digit_ends[i]]
+        
+#         # plt.imshow(image_2)
+#         # plt.show()
+        
+#         image_2 = cv2.resize(image_2, (50, 50), interpolation = cv2.INTER_AREA)
+        
+#         best_digit = 0
+#         min_mse = 100000000000
+#         for i in range(len(ref_digits)):
+#             digit = ref_digits[i]
+#             mse = np.sum((image_2.astype("float") - digit.astype("float")) ** 2)
+#             if mse < min_mse:
+#                 min_mse = mse
+#                 best_digit = i
+#         digit_string += str(best_digit)
+    
+#     #print(digit_string)
+    
+#     if represents_int(digit_string):
+#         power = int(digit_string)
+#     else:
+#         power = 0
+    
+#     return power
 
 def identify_number_of_enemy_cards():
     # identify the number of cards in the enemy's hand
@@ -1054,6 +1292,55 @@ def train_card_classifier():
         fraction_x = 0.2
         fraction_y = 0.25
         image = image[int(image.shape[0] * fraction_x):-int(image.shape[0] * fraction_x), int(image.shape[1] * fraction_y):-int(image.shape[1] * fraction_y)]
+        
+        # scale_percent = 100 # percent of original size
+        # if scale_percent != 100:
+        #     width = int(image.shape[1] * scale_percent / 100)
+        #     height = int(image.shape[0] * scale_percent / 100)
+        #     dim = (width, height)
+              
+        #     # resize image
+        #     image = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
+        
+        # if 'an craite longship' in name:
+        #     plt.imshow(image)
+        #     plt.show()
+        
+        # print()
+        # print()
+        
+        im = Image.fromarray(image)
+        active_hash = imagehash.phash(im)
+        hashes.append(active_hash)
+        
+    return names, hashes
+
+def train_hand_card_classifier():
+    files = glob('./card_images_no_tooltip/*')
+    names = []
+    hashes = []
+    for i in range(len(files)):
+        #print(i)
+        file = files[i]
+        name = file.split('\\')[-1][:-4]
+        names.append(name)
+        #print(name)
+        image = cv2.imread(file)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        image = image[0:178, 0:125, :]
+        image = image[85:]
+        
+        if 'phooca' in name:
+            plt.imshow(image)
+            plt.show()
+        
+        # plt.imshow(image)
+        # plt.show()
+        
+        # fraction_x = 0.2
+        # fraction_y = 0.25
+        # image = image[int(image.shape[0] * fraction_x):-int(image.shape[0] * fraction_x), int(image.shape[1] * fraction_y):-int(image.shape[1] * fraction_y)]
         
         # scale_percent = 100 # percent of original size
         # if scale_percent != 100:
@@ -1298,20 +1585,26 @@ if __name__ == "__main__":
     time.sleep(3)
     
     # uncomment to take screenshot for development
-    take_screenshot()
+    #take_screenshot()
     
     # uncomment to create image hash references based on image library of cards
     # names, hashes = train_card_classifier()
     # pickle.dump(names, open('./classifier/names.p', 'wb'))
     # pickle.dump(hashes, open('./classifier/hashes.p', 'wb'))
     
+    # uncomment to create image hash references for identifying cards in hand
+    # names, hashes = train_hand_card_classifier()
+    # pickle.dump(names, open('./classifier/names.p', 'wb'))
+    # pickle.dump(hashes, open('./classifier/hand_hashes.p', 'wb'))
+    
     # load classifier parameters from files
     ref_names = pickle.load(open('./classifier/names.p', 'rb'))
     ref_hashes = pickle.load(open('./classifier/hashes.p', 'rb'))
+    ref_hashes_hand = pickle.load(open('./classifier/hand_hashes.p', 'rb'))
     
     #train_keras_digit_classifier()
     
-    #digit_hashes = train_digit_classifier()
+    digit_hashes = train_digit_classifier()
     
     #train_digit_classifier()
     #identify_mulligan_choices()
