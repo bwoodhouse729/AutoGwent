@@ -334,7 +334,7 @@ def identify_board():
     
     # TODO: Could restrict to units and artifacts for classification here
     
-    #image = cv2.imread('./development_screenshots/sample_bleed.png')
+    image = cv2.imread('./development_screenshots/sample_bleed.png')
     #image = cv2.imread('./development_screenshots/sample_defender.png')
     #image = cv2.imread('./development_screenshots/sample_doomed.png')
     #image = cv2.imread('./development_screenshots/sample_immunity_sleeping_order.png')
@@ -346,7 +346,8 @@ def identify_board():
     #image = cv2.imread('./development_screenshots/sample_board_9_cards.png')
     #image = cv2.imread('./development_screenshots/sample_board_8_cards.png')
     #image = cv2.imread('./development_screenshots/sample_armor.png')
-    image = cv2.imread('./development_screenshots/sample_order_red_charge.png')
+    #image = cv2.imread('./development_screenshots/sample_order_red_charge.png')
+    #image = cv2.imread('./development_screenshots/sample_hand_8_cards.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     diamond_heights = [134, 267, 422, 589]
@@ -526,6 +527,7 @@ def identify_card(card):
     # TODO: Copy cardbacks from site
     
     # Identify card power
+    # TODO: 1s are sometimes mis-identified as other digits
     
     # Isolate pixels that stand out in diamond      
     # Mask white, red, or green number in upper left
@@ -549,15 +551,18 @@ def identify_card(card):
     
     upper_left_card = card[height_upper:height_lower, width_left:width_right, :]
     
+    # plt.imshow(upper_left_card)
+    # plt.show()
+    
     # filter out orange from shield
     upper_left_hsv = cv2.cvtColor(upper_left_card, cv2.COLOR_RGB2HSV)
     
-    lower_green = np.array([55, 50, 100])
+    lower_green = np.array([55, 50, 150])
     upper_green = np.array([65, 255, 255])
     lower_red = np.array([0, 190, 150])
     upper_red = np.array([20, 220, 256])
-    lower_white = np.array([20, 20, 0])
-    upper_white = np.array([25, 60, 255])
+    lower_white = np.array([20, 30, 150])
+    upper_white = np.array([30, 50, 256])
     
     mask1 = cv2.inRange(upper_left_hsv, lower_green, upper_green)
     mask2 = cv2.inRange(upper_left_hsv, lower_red, upper_red)
@@ -567,6 +572,7 @@ def identify_card(card):
     # plt.show()
     
     mask = mask1 | mask2 | mask3
+    #mask = mask3
     
     # plt.imshow(mask)
     # plt.show()
@@ -590,7 +596,7 @@ def identify_card(card):
     
     #upper_left_card = cv2.resize(upper_left_card, (int(round(ref_digits[0].shape[1])), int(round(ref_digits[0].shape[0]))), interpolation = cv2.INTER_AREA)
     #ret, upper_left_card = cv2.threshold(upper_left_card, 127, 255, cv2.THRESH_BINARY)
-    power = identify_number(upper_left_card)
+    power = identify_number(upper_left_card, min_count_kept=5)
     print('Power: ' + str(power))
     
     # Identify card armor
@@ -608,7 +614,7 @@ def identify_card(card):
     # plt.show()
     
     armor_hsv = cv2.cvtColor(armor_image, cv2.COLOR_RGB2HSV)
-    lower_bound = np.array([20, 30, 100])
+    lower_bound = np.array([20, 30, 150])
     upper_bound = np.array([30, 50, 256])
     
     # plt.hist(armor_hsv[:,:,0])
@@ -626,7 +632,7 @@ def identify_card(card):
     if armor_present:
         #np.set_printoptions(threshold=np.inf)
         #print(armor_image)
-        armor = identify_number(mask)
+        armor = identify_number(mask, min_count_kept=5, remove_corners=True)
         print('Armor: ' + str(armor))
     
     # Identify vitality or bleed (with amount) or neither
@@ -651,7 +657,7 @@ def identify_card(card):
         
         mask = cv2.inRange(vitality_image_hsv, lower_white, upper_white)
         
-        vitality_amount = identify_number(mask)
+        vitality_amount = identify_number(mask, min_count_kept=5, remove_corners=False)
         print('Vitality: ' + str(vitality_amount))
         
         # plt.imshow(mask)
@@ -673,7 +679,7 @@ def identify_card(card):
         
         mask = cv2.inRange(vitality_image_hsv, lower_white, upper_white)
         
-        bleed_amount = identify_number(mask)
+        bleed_amount = identify_number(mask, min_count_kept=5, remove_corners=False)
         print('Bleed: ' + str(bleed_amount))
         
     # plt.imshow(vitality_bleed_image)
@@ -761,7 +767,7 @@ def identify_enemy_passed():
     pass
 
 def identify_allied_hand():
-    image = cv2.imread('./development_screenshots/sample_hand_10_cards.png')
+    image = cv2.imread('./development_screenshots/sample_hand_8_cards.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     # Identify number of cards in allied hand using number in bottom right
@@ -789,7 +795,7 @@ def identify_allied_hand():
     # plt.imshow(mask)
     # plt.show()
     
-    hand_count = identify_number(mask)
+    hand_count = identify_number(mask, min_count_kept=2, remove_corners=False)
     if len(str(hand_count)) <= 3:
         hand_count = 0
     else:
@@ -868,20 +874,22 @@ def identify_allied_hand():
         
         # TODO: Identify card power
         
+        
         # TODO: Can identify armor, but must mouse over card
     
 
 def identify_digit(image):
     
-    # print(np.shape(image))
-    
-    if np.shape(image)[1] < 4:
-        return 1
+    if np.shape(image)[0] * np.shape(image)[1] == 0:
+        return -1
     
     image = cv2.resize(image, (15, 25), interpolation = cv2.INTER_AREA)
     
-    # plt.imshow(image)
-    # plt.show()
+    plt.imshow(image)
+    plt.show()
+    
+    if np.shape(image)[1] < 4 or np.sum(image) > 255 * (0.80 * np.shape(image)[0] * np.shape(image)[1]):
+        return 1
     
     best_match = -1
     min_score = 1000000000000
@@ -916,7 +924,7 @@ def identify_digit(image):
     elif best_match == 3:
         
         # threshold lower right and potentially switch to 2
-        lower_right = image[8:11, 20:]
+        lower_right = image[15:18, 10:]
         threshold = 5
         if np.sum(lower_right) < threshold * 255:
             best_match = 2
@@ -926,6 +934,13 @@ def identify_digit(image):
         threshold = 20
         if np.sum(left) > threshold * 255:
             best_match = 8
+    elif best_match == 5:
+        
+        # threshold upper right and potentially switch to 2
+        lower_right = image[5:10, 10:]
+        threshold = 15
+        if np.sum(lower_right) > threshold * 255:
+            best_match = 3
     elif best_match == 7:
         # threshold lower right and potentially switch to 8
         lower_right = image[17:, 10:]
@@ -950,7 +965,21 @@ def identify_digit(image):
             
     return best_match
 
-def identify_number(image, min_count_kept=2):
+def identify_number(image, min_count_kept=2, remove_corners=True):
+    
+    if remove_corners:
+        jump_in = 22
+        for i in range(jump_in):
+            for j in range(jump_in):
+                if i < jump_in - j:
+                    image[i, j] = 0
+                    image[image.shape[0] - i - 1, j] = 0
+                    image[i, image.shape[1] - j - 1] = 0
+                    image[image.shape[0] - i - 1, image.shape[1] - j - 1] = 0
+    
+    # plt.imshow(image)
+    # plt.show()
+    
     digits = isolate_digits(image, min_count_kept)
     
     built_string = ''
@@ -960,7 +989,8 @@ def identify_number(image, min_count_kept=2):
         #print(digits[i][0][0])
         active_int = identify_digit(digits[i])
         #print(active_int)
-        built_string += str(active_int)
+        if active_int != -1:
+            built_string += str(active_int)
     
     if represents_int(built_string):
         return int(built_string)
