@@ -767,7 +767,7 @@ def identify_enemy_passed():
     pass
 
 def identify_allied_hand():
-    image = cv2.imread('./development_screenshots/sample_hand_8_cards.png')
+    image = cv2.imread('./development_screenshots/sample_hand_10_cards.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     # Identify number of cards in allied hand using number in bottom right
@@ -863,20 +863,33 @@ def identify_allied_hand():
         # Apply matrix H to source image.
         card = cv2.warpPerspective(image, H, (width, height))
 
+        diamond = card[15:70, 20:60, :]
+        # plt.imshow(diamond)
+        # plt.show()
+
         # cut off diamond
         card = card[85:]
 
-        plt.imshow(card)
-        plt.show()
+        # plt.imshow(card)
+        # plt.show()
         
         name = classify_hand_card_image(card)
         print(name)
         
-        # TODO: Identify card power
+        # Identify card power
+        lower_white = np.array([20, 30, 150])
+        upper_white = np.array([30, 50, 256])
         
+        diamond_hsv = cv2.cvtColor(diamond, cv2.COLOR_RGB2HSV)
+        mask = cv2.inRange(diamond_hsv, lower_white, upper_white)
+        
+        # plt.imshow(mask)
+        # plt.show()
+        
+        power = identify_number(mask)
+        print('Power: ' + str(power))
         
         # TODO: Can identify armor, but must mouse over card
-    
 
 def identify_digit(image):
     
@@ -885,8 +898,8 @@ def identify_digit(image):
     
     image = cv2.resize(image, (15, 25), interpolation = cv2.INTER_AREA)
     
-    plt.imshow(image)
-    plt.show()
+    # plt.imshow(image)
+    # plt.show()
     
     if np.shape(image)[1] < 4 or np.sum(image) > 255 * (0.80 * np.shape(image)[0] * np.shape(image)[1]):
         return 1
@@ -1639,8 +1652,10 @@ if __name__ == "__main__":
     #train_digit_classifier()
     #identify_mulligan_choices()
     
-    identify_allied_hand()
+    #identify_allied_hand()
     #identify_board()
+    
+    action_play_card(0, 2, 0)
     
     #action_hard_pass()
     
