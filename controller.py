@@ -23,6 +23,9 @@ TODO: Long-term, connect with C++ game simulator and AI engine to make choices
       This script will execute the choices made.
 TODO: Log each game in an easy-to-process manner.
 
+TODO: Dive in and set up scripted AI to play neutral non-interactive unit deck.
+
+TODO: Set up a system to direct follow-up actions when playing a card.
 TODO: Recognize symbols in upper left of card.
 """
 
@@ -210,8 +213,8 @@ class Game:
         self.header_height = 33 # pixels
 
     def action_end_targeting(self):
-        # right click? to end targeting mode
-        pass
+        # right click to end targeting mode
+        pyautogui.click(button='right')
     
     def action_end_turn(self):
         # click button to end turn
@@ -220,7 +223,25 @@ class Game:
     
     def action_order_card(self, row, position):
         # execute order on card in specified row and position
-        pass
+        c = self.board[row][position]
+        
+        # click card to start order
+        row_card_count = len(self.board[row])
+        if row_card_count % 2 == 0:
+            start_index = 4 - (row_card_count // 2)
+            target_coordinates = upper_lefts_even[row][start_index + position]
+            target_coordinates[0] += 10
+            target_coordinates[1] += 10
+        else:
+            start_index = 5 - ((row_card_count + 1) // 2)
+            target_coordinates = upper_lefts_odd[row][start_index + position]
+            target_coordinates[0] += 10
+            target_coordinates[1] += 10
+        
+        pyautogui.dragTo(target_coordinates[1], target_coordinates[0], 0.1)
+        pyautogui.click()
+        
+        # TODO: Follow up with other necessary targeting
     
     def action_hard_pass(self):
         # click and hold end turn button to hard pass
@@ -264,7 +285,23 @@ class Game:
     
     def action_target_card(self, row, position):
         # click card in specified row and position to assign target of action
-        pass
+        c = self.board[row][position]
+        
+        # click card
+        row_card_count = len(self.board[row])
+        if row_card_count % 2 == 0:
+            start_index = 4 - (row_card_count // 2)
+            target_coordinates = upper_lefts_even[row][start_index + position]
+            target_coordinates[0] += 10
+            target_coordinates[1] += 10
+        else:
+            start_index = 5 - ((row_card_count + 1) // 2)
+            target_coordinates = upper_lefts_odd[row][start_index + position]
+            target_coordinates[0] += 10
+            target_coordinates[1] += 10
+        
+        pyautogui.dragTo(target_coordinates[1], target_coordinates[0], 0.1)
+        pyautogui.click()
     
     def analyze_game_state(self):
         # observe and record everything possible about the current game state
@@ -852,6 +889,7 @@ class Game:
     
     def identify_current_player(self):
         # use coin image to identify current player
+        # look for blue or red banner next to coin
         pass
     
     def identify_enemy_leader_ability(self):
@@ -1710,7 +1748,7 @@ if __name__ == "__main__":
     time.sleep(3)
     
     # uncomment to take screenshot for development
-    #take_screenshot()
+    g.take_screenshot()
     
     # uncomment to create image hash references based on image library of cards
     # names, hashes = train_card_classifier()
@@ -1734,9 +1772,12 @@ if __name__ == "__main__":
     #train_digit_classifier()
     #identify_mulligan_choices()
     
-    g.identify_allied_hand()
-    g.identify_board()
-    g.action_play_card(0, 2, 0)
+    player = g.identify_current_player()
+    print(player)
+    
+    # g.identify_allied_hand()
+    # g.identify_board()
+    # g.action_play_card(0, 2, 0)
     
     #action_hard_pass()
     
