@@ -361,7 +361,18 @@ class Game:
     
     def check_for_board(self):
         # return True if currently viewing the game board
-        pass
+        # check for specific blue or red color on RHS
+        
+        pixel_blue = self.image[507:508, 1531:1532, :][0, 0]
+        pixel_red = self.image[398:399, 1531:1532, :][0, 0]
+        
+        blue = np.array([6, 56, 80])
+        red = np.array([60, 0, 0])
+        
+        threshold = 10
+        if np.linalg.norm(pixel_blue - blue) < threshold or np.linalg.norm(pixel_red - red) < threshold:
+            return True
+        return False
     
     def check_for_card_choice(self):
         # return True if currently making a choice between cards
@@ -890,7 +901,28 @@ class Game:
     def identify_current_player(self):
         # use coin image to identify current player
         # look for blue or red banner next to coin
-        pass
+        #image = cv2.imread('./screenshots/active_screen.png')
+        #image = cv2.imread('./development_screenshots/sample_my_turn.png')
+        image = cv2.imread('./development_screenshots/sample_opponent_turn.png')
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        #blue: 6, 56, 80
+        #red: 60, 0, 0
+        
+        pixel_blue = image[507:508, 1531:1532, :][0, 0]
+        pixel_red = image[398:399, 1531:1532, :][0, 0]
+        
+        blue = np.array([6, 56, 80])
+        red = np.array([60, 0, 0])
+        
+        player = -1
+        
+        threshold = 10
+        if np.linalg.norm(pixel_blue - blue) < threshold:
+            player = 0
+        if np.linalg.norm(pixel_red - red) < threshold:
+            player = 1
+            
+        return player
     
     def identify_enemy_leader_ability(self):
         # use leader ability image to identify enemy leader ability
@@ -1748,7 +1780,7 @@ if __name__ == "__main__":
     time.sleep(3)
     
     # uncomment to take screenshot for development
-    g.take_screenshot()
+    #g.take_screenshot()
     
     # uncomment to create image hash references based on image library of cards
     # names, hashes = train_card_classifier()
