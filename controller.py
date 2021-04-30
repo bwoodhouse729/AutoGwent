@@ -308,23 +308,24 @@ class Game:
         
         self.take_screenshot()
         self.image = imageio.imread('./screenshots/active_screen.png')
+        print(time.time())
         
         # Identify the current game window
-        self.home_active = self.check_for_home()
-        if self.home_active:
+        self.board_active = self.check_for_board()
+        if self.board_active:
             self.game_select_active = False
-            self.board_active = False
+            self.home_active = False
             self.card_choice_active = False
             self.mulligans_active = False
         else:
             self.game_select_active = self.check_for_game_select()
             if self.game_select_active:
-                self.board_active = False
+                self.home_active = False
                 self.card_choice_active = False
                 self.mulligans_active = False
             else:
-                self.board_active = self.check_for_board()
-                if self.board_active:
+                self.home_active = self.check_for_home()
+                if self.home_active:
                     self.card_choice_active = False
                     self.mulligans_active = False
                 else:
@@ -339,25 +340,27 @@ class Game:
         elif self.game_select_active:
             pass # nothing to do
         elif self.board_active:
-            self.current_player = self.identify_current_player()
+            self.identify_current_player()
             if self.current_player == 1:
                 # if opponent is playing a card, record it
                 enemy_card = self.identify_opponent_card()
                 if enemy_card != '':
                     self.enemy_cards_played.append(enemy_card)
             else:
-                self.enemy_faction, self.enemy_leader_ability, self.enemy_leader_ability_charges = self.identify_enemy_leader_ability()
-                self.enemy_passed = self.identify_enemy_passed()
-                self.scores = self.identify_scores()
-                self.board = self.identify_board()
-                self.allied_hand = self.identify_allied_hand()
-                self.number_of_enemy_cards = self.identify_number_of_enemy_cards()
+                # self.enemy_faction, self.enemy_leader_ability, self.enemy_leader_ability_charges = self.identify_enemy_leader_ability()
+                # self.enemy_passed = self.identify_enemy_passed()
+                # self.scores = self.identify_scores()
+                self.identify_board()
+                self.identify_allied_hand()
+                # self.number_of_enemy_cards = self.identify_number_of_enemy_cards()
         elif self.mulligans_active:
-            self.number_of_mulligans = self.identify_number_of_mulligans()
-            self.mulligan_names, self.mulligan_centers = self.identify_mulligan_choices()
+            pass
+            # self.number_of_mulligans = self.identify_number_of_mulligans()
+            # self.mulligan_names, self.mulligan_centers = self.identify_mulligan_choices()
         elif self.card_choice_active:
-            self.card_choice_names, self.card_choice_centers = self.identify_card_choices()
-            self.card_choice_count = self.identify_choice_count()
+            pass
+            # self.card_choice_names, self.card_choice_centers = self.identify_card_choices()
+            # self.card_choice_count = self.identify_choice_count()
     
     def check_for_board(self):
         # return True if currently viewing the game board
@@ -374,16 +377,18 @@ class Game:
             return True
         return False
     
-    def check_for_card_choice(self):
-        # return True if currently making a choice between cards
-        pass
+    # def check_for_card_choice(self):
+    #     # return True if currently making a choice between cards
+    #     pass
     
     def check_for_game_select(self):
         # return True if currently on the game select screen
+        # TODO: Take sample of game select screen
         pass
     
     def check_for_home(self):
         # return True if currently on the home screen
+        # TODO: Take sample of home screen
         pass
     
     def check_for_mulligan(self):
@@ -901,12 +906,11 @@ class Game:
     def identify_current_player(self):
         # use coin image to identify current player
         # look for blue or red banner next to coin
-        #image = cv2.imread('./screenshots/active_screen.png')
+        
         #image = cv2.imread('./development_screenshots/sample_my_turn.png')
-        image = cv2.imread('./development_screenshots/sample_opponent_turn.png')
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        #blue: 6, 56, 80
-        #red: 60, 0, 0
+        #image = cv2.imread('./development_screenshots/sample_opponent_turn.png')
+        
+        image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
         
         pixel_blue = image[507:508, 1531:1532, :][0, 0]
         pixel_red = image[398:399, 1531:1532, :][0, 0]
@@ -922,7 +926,7 @@ class Game:
         if np.linalg.norm(pixel_red - red) < threshold:
             player = 1
             
-        return player
+        self.current_player = player
     
     def identify_enemy_leader_ability(self):
         # use leader ability image to identify enemy leader ability
@@ -1804,8 +1808,8 @@ if __name__ == "__main__":
     #train_digit_classifier()
     #identify_mulligan_choices()
     
-    player = g.identify_current_player()
-    print(player)
+    # player = g.identify_current_player()
+    # print(player)
     
     # g.identify_allied_hand()
     # g.identify_board()
