@@ -393,13 +393,42 @@ class Game:
     
     def check_for_home(self):
         # return True if currently on the home screen
-        image = cv2.imread('./development_screenshots/sample_game_select_standard.png')
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        #image = cv2.imread('./development_screenshots/sample_home_screen.png')
+        #image = cv2.imread('./development_screenshots/sample_game_select_standard.png')
+        #image = cv2.imread('./development_screenshots/sample_game_select_seasonal.png')
+        #image = cv2.imread('./development_screenshots/sample_game_select_training.png')
+        #image = cv2.imread('./development_screenshots/sample_my_turn.png')
+        image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
         
         # plt.imshow(image)
         # plt.show()
         
         # Look for power button without back button
+        # 834, 1535 is (43, 30, 22)
+        pixel = image[834, 1535]
+        target = np.array([43, 30, 22])
+        #print(pixel)
+        threshold = 10
+        if np.linalg.norm(target - pixel) < threshold:
+            power_button = True
+        else:
+            power_button = False
+            
+        # 849, 728 is (44, 31, 22)
+        pixel = image[850, 772]
+        target = np.array([44, 31, 22])
+        threshold = 10
+        #print(pixel)
+        if np.linalg.norm(target - pixel) < threshold:
+            back_button = True
+        else:
+            back_button = False
+            
+        if power_button and (not back_button):
+            return True
+        else:
+            return False
     
     def check_for_mulligan(self):
         # return True if currently viewing a mulligan screen
@@ -1790,7 +1819,7 @@ if __name__ == "__main__":
     # text = pytesseract.image_to_string(image) #, config='digits -psm 7')
     # print('OCR: ' + text.rstrip())
     
-    g.check_for_home()
+    print(g.check_for_home())
     
     # pause to allow user to make Gwent window active
     time.sleep(3)
