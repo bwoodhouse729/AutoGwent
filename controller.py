@@ -387,7 +387,9 @@ class Game:
         # image = cv2.imread('./development_screenshots/sample_game_select_seasonal.png')
         # image = cv2.imread('./development_screenshots/sample_game_select_training.png')
         
-        # TODO: Look for clear indicator
+        # Look for power button and back button at bottom of screen
+        # To identify exactly which version, look for horizontal line of specific color
+        # at one of 3 places
     
     def check_for_home(self):
         # return True if currently on the home screen
@@ -397,7 +399,7 @@ class Game:
         # plt.imshow(image)
         # plt.show()
         
-        
+        # Look for power button without back button
     
     def check_for_mulligan(self):
         # return True if currently viewing a mulligan screen
