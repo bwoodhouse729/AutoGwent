@@ -383,13 +383,21 @@ class Game:
     
     def check_for_game_select(self):
         # return True if currently on the game select screen
-        # TODO: Take sample of game select screen
-        pass
+        image = cv2.imread('./development_screenshots/sample_game_select_standard.png')
+        # image = cv2.imread('./development_screenshots/sample_game_select_seasonal.png')
+        # image = cv2.imread('./development_screenshots/sample_game_select_training.png')
+        
+        # TODO: Look for clear indicator
     
     def check_for_home(self):
         # return True if currently on the home screen
-        # TODO: Take sample of home screen
-        pass
+        image = cv2.imread('./development_screenshots/sample_game_select_standard.png')
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        # plt.imshow(image)
+        # plt.show()
+        
+        
     
     def check_for_mulligan(self):
         # return True if currently viewing a mulligan screen
@@ -1779,6 +1787,8 @@ if __name__ == "__main__":
     # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # text = pytesseract.image_to_string(image) #, config='digits -psm 7')
     # print('OCR: ' + text.rstrip())
+    
+    g.check_for_home()
     
     # pause to allow user to make Gwent window active
     time.sleep(3)
