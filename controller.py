@@ -308,6 +308,7 @@ class Game:
         
         self.take_screenshot()
         self.image = imageio.imread('./screenshots/active_screen.png')
+        self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
         print(time.time())
         
         # Identify the current game window
@@ -383,13 +384,42 @@ class Game:
     
     def check_for_game_select(self):
         # return True if currently on the game select screen
-        image = cv2.imread('./development_screenshots/sample_game_select_standard.png')
-        # image = cv2.imread('./development_screenshots/sample_game_select_seasonal.png')
-        # image = cv2.imread('./development_screenshots/sample_game_select_training.png')
         
-        # Look for power button and back button at bottom of screen
-        # To identify exactly which version, look for horizontal line of specific color
-        # at one of 3 places
+        # image = cv2.imread('./development_screenshots/sample_game_select_standard.png')
+        # # image = cv2.imread('./development_screenshots/sample_game_select_seasonal.png')
+        # # image = cv2.imread('./development_screenshots/sample_game_select_training.png')
+        # # image = cv2.imread('./development_screenshots/sample_home_screen.png')
+        # # image = cv2.imread('./development_screenshots/sample_my_turn.png')
+        
+        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        # Criteria: power button and back button at bottom of screen
+        # back button
+        # 850, 770
+        # 44, 31, 22
+        
+        # power button
+        # 864, 1550
+        # 128, 92, 54
+        
+        image_back = self.image[850:851, 770:771, :][0, 0]
+        image_power = self.image[864:865, 1550:1551, :][0, 0]
+        
+        back_color = np.array([44, 31, 22])
+        power_color = np.array([128, 92, 54])
+        
+        power_present = False
+        back_present = False
+        threshold = 10
+        if np.linalg.norm(image_power - power_color) < threshold:
+            power_present = True
+        if np.linalg.norm(image_back - back_color) < threshold:
+            back_present = True
+            
+        # TODO: To identify exactly which version of game select screen, look
+        # for horizontal line of specific color at one of 3 places
+        
+        return (power_present and back_present)
     
     def check_for_home(self):
         # return True if currently on the home screen
@@ -513,6 +543,9 @@ class Game:
     
     def end_game(self):
         # click in a few places to move back to primary menu
+        
+        # TODO: Take in-game screenshots for this task.
+        
         pass
     
     def identify_board(self):
@@ -1819,7 +1852,7 @@ if __name__ == "__main__":
     # text = pytesseract.image_to_string(image) #, config='digits -psm 7')
     # print('OCR: ' + text.rstrip())
     
-    print(g.check_for_home())
+    print(g.check_for_game_select())
     
     # pause to allow user to make Gwent window active
     time.sleep(3)
