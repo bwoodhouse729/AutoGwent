@@ -544,9 +544,11 @@ class Game:
     def end_game(self):
         # click in a few places to move back to primary menu
         
-        # TODO: Take in-game screenshots for this task.
+        image = cv2.imread('./development_screenshots/sample_end_game.png')
+        #image = cv2.imread('./development_screenshots/sample_reward.png')
         
-        pass
+        # TODO: click gg, next, then close buttons
+        
     
     def identify_board(self):
         # Identify all cards on the board and their various attributes
@@ -1852,13 +1854,13 @@ if __name__ == "__main__":
     # text = pytesseract.image_to_string(image) #, config='digits -psm 7')
     # print('OCR: ' + text.rstrip())
     
-    print(g.check_for_game_select())
+    #print(g.check_for_game_select())
     
     # pause to allow user to make Gwent window active
     time.sleep(3)
     
     # uncomment to take screenshot for development
-    #g.take_screenshot()
+    g.take_screenshot()
     
     # uncomment to create image hash references based on image library of cards
     # names, hashes = train_card_classifier()
